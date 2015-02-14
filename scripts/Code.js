@@ -122,10 +122,11 @@ function clone (o) {
  * @param {number} [maxAttempts=5] optional maximum number of amounts to try
  * @param {number} [attempts=1] optional the attempt number of this instance - usually only used recursively and not user supplied
  * @param {boolean} [optLogAttempts=false] log re-attempts to Logger
+ * @param {function} [optchecker] function should throw an error "force backoff" if you want to force a retry
  * @return {*} results of the callback 
  */
-  
-function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , optLogAttempts ) {
+var TRYAGAIN = "force backoff anyway";
+function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , optLogAttempts , optChecker) {
 
   // can handle multiple error conditions by expanding this list
   function errorQualifies (errorText) {
@@ -139,7 +140,9 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
             "Exception: Cannot execute AddColumn because another task",
             "Service invoked too many times in a short time:",
             "Exception: Internal error.",
-            "Exception: ???????? ?????: DriveApp."
+            "Exception: ???????? ?????: DriveApp.",
+            TRYAGAIN
+            
            ]
             .some(function(e){
               return  errorText.toString().slice(0,e.length) == e  ;
@@ -156,6 +159,11 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
   // maximum tries before giving up
   maxAttempts = Math.abs(maxAttempts || 5);
   
+  // make sure that the checker is really a function
+  if (optChecker && typeof(callBack) !== "function") {
+    throw ("if you specify a checker it must be a function");
+  }
+  
   // check properly constructed
   if (!callBack || typeof(callBack) !== "function") {
     throw ("you need to specify a function for rateLimitBackoff to execute");
@@ -167,7 +175,10 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
     try {
 
       var r = callBack();
-      return r;
+      
+      // this is to find content based errors that might benefit from a retry
+
+      return optChecker ? optChecker(r) : r;
     }
     catch(err) {
     
