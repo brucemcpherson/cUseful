@@ -12,7 +12,7 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.2.8',
+      version:'2.2.10',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
       description:'various dependency free useful functions'
@@ -28,7 +28,7 @@ function getLibraryInfo () {
  **/
 function generateUniqueString (optAbcLength) {
   var abcLength = isUndefined(optAbcLength) ? 3 : optAbcLength;
-  return (new Date().getTime()).toString(36) + arbitraryString(abcLength) ;
+  return  (new Date().getTime()).toString(36)  + arbitraryString(abcLength) ;
 }
 
 /** 
@@ -496,3 +496,105 @@ function b64ToString ( b64) {
   return Utilities.newBlob(Utilities.base64Decode(result.content)).getDataAsString();
 }
 
+/**
+ * checks that args are what they should be
+ * you can convert a functions arguments to an array and call like this
+ * you can use the special type any to allow undefined as a valid argument
+ * validateArgs (Array.prototype.slice.call(arguments), [... expected types ...]);
+ * @param {Array} args the arguments to check
+ * @param {Array.string} types what to check them against
+ * @param {boolean} optFail whether to throw an error if no match [default=true]
+ * @return {object} whether args are okay. - test for .ok.. will throw and error if optFail is true
+ */
+function validateArgs (funcArgs , funcTypes , optFail) {
+
+  // just clean & clone the args arrays
+  var args = Array.isArray(funcArgs) ? funcArgs.slice(0) : (funcArgs ? [funcArgs] : []) ;
+  var types = Array.isArray(funcTypes) ? funcTypes.slice(0) : (funcTypes ? [funcTypes] : []);
+  var fail = applyDefault(optFail, true);
+  
+  // we'll allow for any args
+  if (args.length < types.length) {
+    args = arrayAppend(args, new Array(types.length - args.length));
+  }
+  
+  // should be same length now
+  if (args.length !== types.length) {
+    throw "validateArgs failed-number of args and number of types must match("+args.length+":"+types.length+")" + JSON.stringify(whereAmI(0));
+    
+  }
+  
+  // now we need to check every type of the array
+  for (var i=0,c = {ok:true}; i<types.length && c.ok;i++) {
+    c = check ( types[i] , args[i], i);
+  }
+  return c;
+  
+  // this does the checking
+  function check(expect,  item , index) {
+    
+    var isOb = isObject(item);
+    var got = typeof item;
+    
+    // if its just any old object we can let it go
+    if ((isOb && expect === "object") || (got === expect)) {
+      return {ok:true};
+    }
+    
+    // for more complicated objects we can check for constructor names
+    var cName = (isOb && item.constructor && item.constructor.name) ?  item.constructor.name : "" ;
+    
+    if (cName === "Array") {
+      //what should be expected is Array.type
+      if (expect.slice(0,cName.length) !== cName  && expect.slice(0,3) !== "any") {
+        return report (expect, got, index, cName);
+      }
+      
+      // this is the type of items in this array
+      var match = new RegExp("\\.(\\w*)").exec(expect);
+      var arrayType = match && match.length > 1 ? match[1] : "";
+      
+      // any kind of array will do?
+      if (!arrayType) {
+        return {ok:true};
+      }
+      // now we need to check every element of the array
+      for (var i=0,c = {ok:true}; i<item.length && c.ok;i++) {
+        c = check ( arrayType , item[i] , index,i);
+      }
+      return c;
+      
+    }
+    
+    // these all match
+    else if (cName === expect || expect === "any") {
+      return {ok:true};
+    }
+    
+    // this is a fail
+    else {
+      return report (expect, got , index,cName);
+    }
+    
+  }
+  
+  function report (expect,got,index,name,elem) {
+    var state =  {
+      ok:false,
+      location:whereAmI(0),
+      detail: {
+        index: index ,
+        arrayElement: applyDefault(elem, -1),
+        type: types[index],
+        expected: expect,
+        got: got
+      }
+    };
+    
+    Logger.log (JSON.stringify(state));
+    if (fail) {
+      throw JSON.stringify(state); 
+    }
+    return state;
+  }
+}
