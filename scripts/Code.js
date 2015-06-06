@@ -12,7 +12,7 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.2.11',
+      version:'2.2.12',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
       description:'various dependency free useful functions'
@@ -606,4 +606,29 @@ function validateArgs (funcArgs , funcTypes , optFail) {
 function columnLabelMaker (columnNumber,s) {
   s = String.fromCharCode(((columnNumber-1) % 26) + 'A'.charCodeAt(0)) + ( s || '' );
   return columnNumber > 26 ? columnLabelMaker ( Math.floor( (columnNumber-1) /26 ) , s ) : s;
+}
+/**
+* general function to walk through a branch
+* @param {object} parent the head of the branch
+* @param {function} nodeFunction what to do with the node
+* @param {function} getChildrenFunctiontion how to get the children
+* @param {number} depth optional depth of node
+* @return {object} the parent for chaining
+*/
+function traverseTree (parent, nodeFunction, getChildrenFunction, depth) {
+  
+  depth = depth || 0;
+  // if still some to do
+  if (parent) {
+    
+    // do something with the header
+    nodeFunction (parent, depth++);
+    
+    // process the children
+    (getChildrenFunction(parent) || []).forEach ( function (d) {
+      traverseTree (d , nodeFunction , getChildrenFunction, depth);
+    });
+    
+  }
+  return parent;
 }
