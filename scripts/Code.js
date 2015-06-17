@@ -142,7 +142,7 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
             "Exception: Internal error.",
             "Exception: ???????? ?????: DriveApp.",
             TRYAGAIN
-            
+
            ]
             .some(function(e){
               return  errorText.toString().slice(0,e.length) == e  ;
