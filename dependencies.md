@@ -1,9 +1,9 @@
 # Google Apps Script Project: cUseful
-This repo (cUseful) was automatically updated on 17 June 2015 11:44:16 BST by GasGit
+This repo (cUseful) was automatically updated on 15 September 2015 10:00:56 BST by GasGit
 
 For more information see the [desktop liberation site](http://ramblings.mcpher.com/Home/excelquirks/drivesdk/gettinggithubready "desktop liberation") or [contact me on G+](https://plus.google.com/+BruceMcpherson "Bruce McPherson - GDE")
 ## Details for Apps Script project cUseful
-Where possibile directly referenced or sub referenced library sources have been copied to this repository, or you can include the library references shown. 
+Where possible directly referenced or sub referenced library sources have been copied to this repository, or you can include the library references shown. 
 The shared link for [cUseful is here](https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing "open in the GAS IDE")
 
 ### Modules of cUseful.gs included in this repo
