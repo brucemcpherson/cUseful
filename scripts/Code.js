@@ -12,7 +12,7 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.2.12',
+      version:'2.2.13',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
       description:'various dependency free useful functions'
@@ -631,4 +631,33 @@ function traverseTree (parent, nodeFunction, getChildrenFunction, depth) {
     
   }
   return parent;
+}
+/**
+ * takes a function and its arguments, runs it and times it
+ * @param {func} the function
+ * @param {...} the rest of the arguments
+ * @return {object} the timing information and the function results
+ */
+function timeFunction () {
+
+    var timedResult = {
+      start: new Date().getTime(),
+      finish: undefined,
+      result: undefined,
+      elapsed:undefined
+    }
+    // turn args into a proper array
+    var args = Array.prototype.slice.call(arguments);
+    
+    // the function name will be the first argument
+    var func = args.splice(0,1)[0];
+    
+    // the rest are the arguments to fn - execute it
+    timedResult.result = func.apply(func, args); 
+    
+    // record finish time
+    timedResult.finish = new Date().getTime();
+    timedResult.elapsed = timedResult.finish - timedResult.start;
+    
+    return timedResult;
 }
