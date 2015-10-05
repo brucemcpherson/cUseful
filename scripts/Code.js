@@ -12,13 +12,36 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.2.13',
+      version:'2.2.14',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
       description:'various dependency free useful functions'
     },
     dependencies:[]
   }; 
+}
+/**
+ * used to create a random 2 dim set of values for a sheet
+ * @param {number} [rows=10] number of rows to generate
+ * @param {number} [columns=8] number of columns to generate
+ * @param {number} [min=0] minimum number of characeters per cell
+ * @param {number} [max=20] maximum number of characters per cell
+ * @return {String[][]} values for sheet or docs tabe
+ */
+function getRandomSheetStrings (rows,columns,min,max) {
+  min = typeof min == typeof undefined ?  2 : min;
+  max = typeof max == typeof undefined ?  20 : max;
+  rows = typeof rows == typeof undefined ?  2 : rows;
+  columns = typeof columns == typeof undefined ?  20 : columns;
+  
+  return new Array(rows).join(',').split(',').map (function() {
+    return new Array (columns).join(',').split(',').map(function() {
+      var size = Math.floor(Math.random() * (max- min + 1)) + min;
+      return size ? new Array(size).join(',').split(',').map(function() {
+        return String.fromCharCode(Math.floor(Math.random() * (0x7E - 0x30 + 1)) + 0x30);    
+      }).join('') : '';
+    });
+  });
 }
 /** 
  * generateUniqueString
