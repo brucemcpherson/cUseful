@@ -12,13 +12,23 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.2.14',
+      version:'2.2.16',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
       description:'various dependency free useful functions'
     },
     dependencies:[]
   }; 
+}
+
+/**
+ * test a string is an email address
+ * from http://www.regular-expressions.info/email.html
+ * @param {string} emailAddress the address to be tested
+ * @return {boolean} whether it is and email address
+ */
+function isEmail (emailAddress) {
+  return /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(emailAddress);
 }
 /**
  * used to create a random 2 dim set of values for a sheet
@@ -38,7 +48,10 @@ function getRandomSheetStrings (rows,columns,min,max) {
     return new Array (columns).join(',').split(',').map(function() {
       var size = Math.floor(Math.random() * (max- min + 1)) + min;
       return size ? new Array(size).join(',').split(',').map(function() {
-        return String.fromCharCode(Math.floor(Math.random() * (0x7E - 0x30 + 1)) + 0x30);    
+        var s = String.fromCharCode(Math.floor(Math.random() * (0x7E - 0x30 + 1)) + 0x30); 
+        // don't allow = as 1st character
+        if (s.slice(0,1) === '=') s = 'x' + s.slice(1);
+        return s;
       }).join('') : '';
     });
   });
@@ -683,4 +696,22 @@ function timeFunction () {
     timedResult.elapsed = timedResult.finish - timedResult.start;
     
     return timedResult;
+}
+
+/**
+* remove padding from base 64 as per JWT spec
+* @param {string} b64 the encoded string
+* @return {string} padding removed
+*/
+function unPadB64 (b64) {
+  return b64 ?  b64.split ("=")[0] : b64;
+}
+
+/**
+* b64 and unpad an item suitable for jwt consumptions
+* @param {string} itemString the item to be encoded
+* @return {string}  the encoded
+*/
+function encodeB64 (itemString) {
+  return unPadB64 (Utilities.base64EncodeWebSafe( itemString));
 }
