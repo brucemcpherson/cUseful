@@ -12,7 +12,7 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.2.16',
+      version:'2.2.18',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
       description:'various dependency free useful functions'
@@ -170,7 +170,8 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
     return ["Exception: Service invoked too many times",
             "Exception: Rate Limit Exceeded",
             "Exception: Quota Error: User Rate Limit Exceeded",
-            "Service error: Spreadsheets",
+            "Service error:",
+            "Exception: Service error:", 
             "Exception: User rate limit exceeded",
             "Exception: Internal error. Please try again.",
             "Exception: Cannot execute AddColumn because another task",
@@ -197,7 +198,7 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
   
   // make sure that the checker is really a function
   if (optChecker && typeof(callBack) !== "function") {
-    throw ("if you specify a checker it must be a function");
+    throw errorStack("if you specify a checker it must be a function");
   }
   
   // check properly constructed
@@ -213,8 +214,8 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
       var r = callBack();
       
       // this is to find content based errors that might benefit from a retry
-
       return optChecker ? optChecker(r) : r;
+      
     }
     catch(err) {
     
@@ -224,7 +225,7 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
         
         //give up?
         if (attempts > maxAttempts) {
-          throw (err + " (tried backing off " + (attempts-1) + " times");
+          throw errorStack(err + " (tried backing off " + (attempts-1) + " times");
         }
         else {
           
@@ -237,12 +238,25 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
       }
       else {
         // some other error
-        throw (err);
+        throw errorStack(err);
       }
     }
   }
 }
 
+/**
+ * get the stack
+ * @return {string} the stack trace
+ */
+function errorStack(e) {
+  try {
+    // throw a fake error
+    throw new Error();  //x is undefined and will fail under use struct- ths will provoke an error so i can get the call stack
+  }
+  catch(err) {
+    return 'Error:' + e + '\n' + err.stack.split('\n').slice(1).join('\n');
+  }
+}
 /**
  * append array b to array a
  * @param {Array.*} a array to be appended to 
@@ -359,7 +373,7 @@ function whereAmI(level) {
   
   try {
     // throw a fake error
-    var __y__ = __X_;  //x is undefined and will fail under use struct- ths will provoke an error so i can get the call stack
+    throw new Error();  //x is undefined and will fail under use struct- ths will provoke an error so i can get the call stack
   }
   catch (err) {
     // return the error object so we know where we are
