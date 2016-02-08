@@ -12,7 +12,7 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.2.18',
+      version:'2.2.19',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
       description:'various dependency free useful functions'
@@ -154,7 +154,7 @@ function clone (o) {
 /**
  * recursive rateLimitExpBackoff()
  * @param {function} callBack some function to call that might return rate limit exception
- * @param {number} [sleepFor=1000] optional amount of time to sleep for on the first failure in missliseconds
+ * @param {number} [sleepFor=750] optional amount of time to sleep for on the first failure in missliseconds
  * @param {number} [maxAttempts=5] optional maximum number of amounts to try
  * @param {number} [attempts=1] optional the attempt number of this instance - usually only used recursively and not user supplied
  * @param {boolean} [optLogAttempts=false] log re-attempts to Logger
@@ -187,8 +187,8 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
   }
   
   
-  // sleep start default is  1 seconds
-  sleepFor = Math.abs(sleepFor || 1000);
+  // sleep start default is  .75 seconds
+  sleepFor = Math.abs(sleepFor || 750);
   
   // attempt number
   attempts = Math.abs(attempts || 1);
@@ -230,7 +230,7 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
         else {
           
           // wait for some amount of time based on how many times we've tried plus a small random bit to avoid races
-          Utilities.sleep (Math.pow(2,attempts)*sleepFor) + (Math.round(Math.random() * sleepFor));
+          Utilities.sleep (Math.pow(2,attempts)*sleepFor + (Math.round(Math.random() * sleepFor)));
           
           // try again
           return rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts , attempts+1,optLogAttempts);
