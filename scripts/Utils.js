@@ -9,7 +9,7 @@ var Utils = (function (ns) {
   * @param {function} callBack some function to call that might return rate limit exception
   * @param {object} options properties as below
   * @param {number} [attempts=1] optional the attempt number of this instance - usually only used recursively and not user supplied
-  * @param {number} [options.sleepFor=1000] optional amount of time to sleep for on the first failure in missliseconds
+  * @param {number} [options.sleepFor=750] optional amount of time to sleep for on the first failure in missliseconds
   * @param {number} [options.maxAttempts=5] optional maximum number of amounts to try
   * @param {boolean} [options.logAttempts=true] log re-attempts to Logger
   * @param {function} [options.checker] function to check whether error is retryable
