@@ -217,6 +217,17 @@ var Utils = (function (ns) {
     return c;
   };
   
+  /**
+  * @param {[*]} arguments unspecified number and type of args
+  * @return {string} a digest of the arguments to use as a key
+  */
+  ns.keyDigest = function () {
+    // conver args to an array and digest them
+    return Utilities.base64Encode (
+      Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_1,Array.prototype.slice.call(arguments).map(function (d) {
+        return (Object(d) === d) ? JSON.stringify(d) : d.toString();
+      }).join("-")));
+  }
 
   return ns;
 }) (Utils || {});
