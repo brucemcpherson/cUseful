@@ -100,9 +100,9 @@ var Utils = (function (ns) {
       }
     }
     
-
+    
   }
-
+  
   /**
   * get the stack
   * @param {Error} e the error
@@ -121,7 +121,7 @@ var Utils = (function (ns) {
   
   // default checker
   function errorQualifies (errorText) {
-
+    
     return ["Exception: Service invoked too many times",
             "Exception: Rate Limit Exceeded",
             "Exception: Quota Error: User Rate Limit Exceeded",
@@ -140,21 +140,21 @@ var Utils = (function (ns) {
     }) ;
     
   }
-
-
+  
+  
   
   /**
-   * convert a data into a suitable format for API
-   * @param {Date} dt the date
-   * @return {string} converted data
-   */
+  * convert a data into a suitable format for API
+  * @param {Date} dt the date
+  * @return {string} converted data
+  */
   ns.gaDate = function  (dt) {
     return Utilities.formatDate(
       dt, Session.getScriptTimeZone(), 'yyyy-MM-dd'
     );
   }
   
-   /** 
+  /** 
   * execute a regex and return the single match
   * @param {Regexp} rx the regexp
   * @param {string} source the source string
@@ -178,7 +178,7 @@ var Utils = (function (ns) {
     var t = s.toString().toLowerCase();
     return t === "yes" || "y" || "true" || "1";
   };
-   
+  
   /** 
   * check if item is undefined
   * @param {*} item the item to check
@@ -187,7 +187,7 @@ var Utils = (function (ns) {
   ns.isUndefined = function (item) {
     return typeof item === 'undefined';
   };
-   
+  
   /** 
   * isObject
   * check if an item is an object
@@ -197,7 +197,7 @@ var Utils = (function (ns) {
   ns.isObject = function (obj) {
     return obj === Object(obj);
   };
-    
+  
   /** 
   * checksum
   * create a checksum on some string or object
@@ -227,7 +227,78 @@ var Utils = (function (ns) {
       Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_1,Array.prototype.slice.call(arguments).map(function (d) {
         return (Object(d) === d) ? JSON.stringify(d) : d.toString();
       }).join("-")));
+  };
+  
+  /**
+  * creates a  closure function to categorize values
+  * @param {...var_arg} arguments takes any number of arguments
+  * @return {function} a closure function
+  */
+  ns.categorize = function (var_arg) {
+    
+    //convert the arguments to an array after sorting
+    var domain_ = Array.prototype.slice.call(arguments);
+    
+    // prepare some default labels
+    var labels_ = domain_.map (function (d,i,a) {
+      return (i ? '>= ' + a[i-1] + ' ' : '' ) + '< ' + d ;
+    });
+    
+    // last category
+    labels_.push (domain_.length ? ('>= ' + domain_[domain_.length-1]) : 'all');
+    
+    /**
+    * gets the category given a domain
+    * @param {*} value the value to categorize
+    * @return {number} the index in the domain
+    */
+    function getCategory (value) {
+      var index = 0;
+      while (domain_[index] <= value) {
+        index++;
+      }
+      return index;
+    }
+    
+    
+    // closure function
+    return function (value) { 
+      
+      return Object.create(null, {
+        index:{
+          get:function () {
+            return getCategory(value);
+          }
+        },
+        label:{
+          get:function () {
+            return labels_[getCategory(value)];
+          }
+        },
+        labels:{
+          get:function () {
+            return labels_;
+          },
+          set:function (newLabels) {
+            if (domain_.length !== newLabels.length-1) {
+              throw 'labels should be an array of length ' + (domain_.length+1);
+            }
+            labels_ = newLabels;
+          }
+        },
+        domain:{
+          get:function () {
+            return domain_;
+          }
+        },
+        toString:{
+          value:function (){
+            return this.label;
+          }
+        }
+      }); 
+    };
   }
-
+  
   return ns;
 }) (Utils || {});
