@@ -300,5 +300,14 @@ var Utils = (function (ns) {
     };
   }
   
+  /**
+  * digest a blob
+  * @param {Blob} blob the blob
+  * @return {string} the sha1 of the blob
+  */
+  ns.blobDigest = function(blob) {
+    return ns.keyDigest(Utilities.base64Encode(blob.getBytes()));
+  };
+  
   return ns;
 }) (Utils || {});
