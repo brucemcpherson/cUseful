@@ -4,7 +4,7 @@
 * @namespace
 */
 var DriveUtils = (function (ns) {
-
+  
   /**
    * to keep this namespace dependency free
    * this must be run to set the driveappservice before it can be used
@@ -13,6 +13,10 @@ var DriveUtils = (function (ns) {
    */
   ns.setService = function (dap) {
     ns.service = dap;
+    ns.rootFolder = Utils.expBackoff ( function () {
+      return ns.service.getRootFolder();
+    });
+    ns.rootFolderId = ns.rootFolder.getId();
     return ns;
   };
   
@@ -141,9 +145,6 @@ var DriveUtils = (function (ns) {
   ns.getFolderFromPath = function (path) {
         
     ns.checkService();
-    var rootFolder = Utils.expBackoff ( function () {
-      return ns.service.getRootFolder();
-    });
     
     return (path || "/").split("/").reduce ( 
       function(prev,current) {
@@ -156,7 +157,7 @@ var DriveUtils = (function (ns) {
         else { 
           return current ? null : prev; 
         }
-      },rootFolder); 
+      },ns.rootFolder); 
   };
   
   /**
@@ -166,30 +167,19 @@ var DriveUtils = (function (ns) {
   */
   ns.getPathFromFolder = function ( folder ,optPath) {
     
-        
     ns.checkService();
-    var rootFolder = Utils.expBackoff ( function () {
-      return ns.service.getRootFolder();
-    });
-    
-    var path = optPath || '/';
     if (!folder) return '';
+    var path = optPath || '/';
     
-    // this means we'll be done.
-    if (folder.getId() === Utils.expBackoff ( function () {
-      return  rootFolder.getId(); 
-    })) {
-      return path;
-    }
-    else {
-      return ns.getPathFromFolder(
+    // we're done if we hit the root folder
+    return folder.getId() === ns.rootFolderId ? path : ns.getPathFromFolder (
         folder.getParents().next() , '/' + folder.getName() + path
       );
-    }
-    
+
   };
   
   
   return ns;
 }) (DriveUtils || {});
+
 
