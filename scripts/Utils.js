@@ -133,7 +133,8 @@ var Utils = (function (ns) {
             "Service invoked too many times in a short time:",
             "Exception: Internal error.",
             "User Rate Limit Exceeded",
-            "Exception: ???????? ?????: DriveApp."
+            "Exception: ???????? ?????: DriveApp.",
+            "Exception: Address unavailable"
            ]
     .some(function(e){
       return  errorText.toString().slice(0,e.length) == e  ;
