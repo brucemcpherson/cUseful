@@ -93,6 +93,7 @@ var DriveUtils = (function (ns) {
         
         var result = Utils.expBackoff(function() {
           return ns.service.Children.list(parentId,options);
+
         },{ logAttempts:false});
 
         
@@ -177,7 +178,7 @@ var DriveUtils = (function (ns) {
     
     if (ns.isDriveApp()) {
     
-      return mime ? getFilesByType (mime) : parent.getFiles();
+      return mime ? DriveApp.getFilesByType (mime) : parent.getFiles();
     }
     else {
 
@@ -185,6 +186,23 @@ var DriveUtils = (function (ns) {
     }
   };
   
+  ns.getFileById = function (id) {
+   try {
+      return Utils.expBackoff ( function () {
+
+        if (!ns.isDriveApp()) {
+          return ns.service.Files.get(id,{fields:"id,title"});  
+        }
+        else {
+          return ns.getFileById(id);
+        }
+      },{logAttempts:false});
+    }
+    catch (err) {
+      return null;
+    }
+  
+  }
   ns.getFolderById = function (path) {
     
     try {
@@ -276,26 +294,33 @@ var DriveUtils = (function (ns) {
     function getFiles (folder,mime) {
       var files= [];
       var it = ns.getFiles (folder , mime) ;
+      folderPath = ns.getPathFromFolder (folder);
       
       if (ns.isDriveApp()) {
-
-        folderPath = ns.getPathFromFolder (folder);
-        
         while (it.hasNext()) {
           var file = it.next();
+          var fileName = file.getName();
           files.push({
             file:file,
             folder:folder,
-            path:folderPath  + file.getName()
+            path:folderPath  + fileName,
+            fileName:fileName,
+            id:file.getId()
           });
         }
       }
       else {
 
         it.forEach(function(d) {
+          
+          // need to get the file name
+          var fileName = ns.getFileById(d.id).title;
           files.push({
             file:d,
-            folder:folder
+            folder:folder,
+            path:folderPath + fileName,
+            fileName:fileName,
+            id:d.id
           });
         })
       }
