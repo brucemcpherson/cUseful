@@ -178,7 +178,7 @@ var DriveUtils = (function (ns) {
     
     if (ns.isDriveApp()) {
     
-      return mime ? DriveApp.getFilesByType (mime) : parent.getFiles();
+      return mime ? ns.service.getFilesByType (mime) : parent.getFiles();
     }
     else {
 
