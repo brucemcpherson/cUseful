@@ -22,11 +22,19 @@ var DriveUtils = (function (ns) {
       FUSIONTABLE:"application/vnd.google-apps.fusiontable",
       SPREADSHEET:"application/vnd.google-apps.spreadsheet",
       UNKNOWN:"application/vnd.google-apps.unknown",
-      VIDEO:"application/vnd.google-apps.video"
+      VIDEO:"application/vnd.google-apps.video",
+      gadget:"application/xml",
+      xml:"text/xml",
+      json:"application/json"
     }
   };
   
-  
+  ns.getShortMime = function (mimeType) {
+    var f = Object.keys(ENUMS.MIMES).filter(function(k) {
+      return ENUMS.MIMES[k] === mimeType;
+    });
+    return f.length ? f[0].toLowerCase() : mimeType.toLowerCase();
+  };
   // for handling advanced services
   ns.ads = (function (ads) {
     
@@ -111,6 +119,7 @@ var DriveUtils = (function (ns) {
     /**
     * return a folder id from a path like /abc/def/ghi
     * @param {string} path the path
+    * @param {boolean} [create=false] create it
     * @return {object} {id:'xxxx'} or null
     */
     ads.getFolderFromPath = function (path)  {
@@ -194,7 +203,7 @@ var DriveUtils = (function (ns) {
           return ns.service.Files.get(id,{fields:"id,title"});  
         }
         else {
-          return ns.getFileById(id);
+          return ns.service.getFileById(id);
         }
       },{logAttempts:false});
     }
