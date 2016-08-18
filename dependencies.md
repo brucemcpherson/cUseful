@@ -1,5 +1,5 @@
 # Google Apps Script Project: cUseful
-This repo (cUseful) was automatically updated on 11 August 2016 15:29:04 BST by GasGit
+This repo (cUseful) was automatically updated on 18 August 2016 11:40:36 BST by GasGit
 
 For more information see the [desktop liberation site](http://ramblings.mcpher.com/Home/excelquirks/drivesdk/gettinggithubready "desktop liberation") or [contact me on G+](https://plus.google.com/+BruceMcpherson "Bruce McPherson - GDE")
 ## Details for Apps Script project cUseful
