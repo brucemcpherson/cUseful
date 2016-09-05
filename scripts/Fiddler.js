@@ -100,6 +100,7 @@ var Fiddler = function () {
     selectRows: function (value , properties) {
       return true;
     }
+    
 
   }; 
   
@@ -167,6 +168,64 @@ var Fiddler = function () {
     return self;
   };
 
+  /**
+   * get the unique values in a column
+   * @param {string} columnName
+   * @return {[*]} array of unique values
+   */
+  self.getUniqueValues = function (columnName) {
+  
+    return self.getColumnValues(columnName).filter(function (d,i,a) {
+      return a.indexOf(d) === i;
+    });
+
+    
+  }
+  /**
+   * iterate through each row - nodifies the data in this fiddler instance
+   * @param {[string]} [columnNames] optional which column names to use (default is all)
+   * @param {boolean} [keepLast=false] whether to keep the last row or the first found
+   * @return {Fiddler} self
+   */
+  self.filterUnique = function (columnNames , keepLast) {
+
+    var headers = self.getHeaders();
+    cols = columnNames || headers;
+    if (!Array.isArray(cols)) cols = [cols];
+    
+    // may need to reverse
+    var data = dataOb_.slice();
+    if (!keepLast && columnNames ) {
+      data.reverse();
+    }
+    // check params are valid
+    if (cols.some(function(d) {
+      return headers.indexOf(d) === -1;
+    })) { 
+      throw 'unknown columns in ' + JSON.stringify(cols) + ' compared to ' + JSON.stringify(headers); 
+    } 
+       
+        
+    // filter out dups
+    data = data.filter(function(d,i,a) {
+      return !a.slice(i+1).some(function (e) {
+        return cols.every(function (f) {
+          return d[f] === e[f];
+        });
+      });
+    });
+    
+    // reverse again
+    if (!keepLast && columnNames ) {
+      data.reverse();
+    }
+    
+    // register
+    dataOb_ = data;
+    return self;
+
+  };
+  
   /**
    * iterate through each row - nodifies the data in this fiddler instance
    * @param {function} [func] optional function that shoud return true if the row is to be kept
