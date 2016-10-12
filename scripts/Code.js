@@ -12,7 +12,7 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.2.41',
+      version:'2.2.42',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
       description:'various dependency free useful functions'
@@ -71,8 +71,7 @@ function getRandomSheetStrings (rows,columns,min,max) {
  * @return {string} a unique string
  **/
 function generateUniqueString (optAbcLength) {
-  var abcLength = isUndefined(optAbcLength) ? 3 : optAbcLength;
-  return  (new Date().getTime()).toString(36)  + arbitraryString(abcLength) ;
+  return Utils.generateUniqueString (optAbcLength);
 }
 
 /** 
@@ -101,11 +100,7 @@ function applyDefault (item,defaultValue) {
  * @return {string} an alpha string
  **/
 function arbitraryString (length) {
-  var s = '';
-  for (var i = 0; i < length; i++) {
-    s += String.fromCharCode(randBetween ( 97,122));
-  }
-  return s;
+  return Utils.arbitraryString (length);
 }
 
 /** 
@@ -116,7 +111,7 @@ function arbitraryString (length) {
  * @return {number} the random number
  **/
 function randBetween(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Utils.randBetween(min, max);
 }
 
 /** 
