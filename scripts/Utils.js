@@ -134,7 +134,8 @@ var Utils = (function (ns) {
             "Exception: Internal error.",
             "User Rate Limit Exceeded",
             "Exception: ???????? ?????: DriveApp.",
-            "Exception: Address unavailable"
+            "Exception: Address unavailable",
+            "Exception: Timeout"
            ]
     .some(function(e){
       return  errorText.toString().slice(0,e.length) == e  ;
@@ -252,17 +253,18 @@ var Utils = (function (ns) {
     
     return c;
   };
-  
+
   /**
   * @param {[*]} arguments unspecified number and type of args
   * @return {string} a digest of the arguments to use as a key
   */
   ns.keyDigest = function () {
+     
     // conver args to an array and digest them
-    return Utilities.base64Encode (
+    return  Utilities.base64EncodeWebSafe (
       Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_1,Array.prototype.slice.call(arguments).map(function (d) {
         return (Object(d) === d) ? JSON.stringify(d) : d.toString();
-      }).join("-")));
+      }).join("-"),Utilities.Charset.UTF_8));
   };
   
   /**
