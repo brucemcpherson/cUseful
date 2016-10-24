@@ -527,7 +527,7 @@ var Utils = (function (ns) {
     var selected = blocks[options.rank ? options.rank -1 : blocks.length -1];
     
     // remove any data we don't need
-    Logger.log(fiddler.createValues());
+
     fiddler
     .filterRows(function (d, props) {
       return props.rowOffset >= selected.start.row && props.rowOffset < selected.start.row + selected.size.rows;
@@ -535,7 +535,7 @@ var Utils = (function (ns) {
     .filterColumns(function (d,props) {
       return props.columnOffset >= selected.start.column && props.columnOffset < selected.start.column + selected.size.columns;
     });
-    Logger.log(fiddler.createValues());
+   
     return {
       blankRows:blankRows,
       blocks:blocks,
