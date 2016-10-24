@@ -253,13 +253,13 @@ var Utils = (function (ns) {
     
     return c;
   };
-
+  
   /**
   * @param {[*]} arguments unspecified number and type of args
   * @return {string} a digest of the arguments to use as a key
   */
   ns.keyDigest = function () {
-     
+    
     // conver args to an array and digest them
     return  Utilities.base64EncodeWebSafe (
       Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_1,Array.prototype.slice.call(arguments).map(function (d) {
@@ -347,11 +347,11 @@ var Utils = (function (ns) {
     return ns.keyDigest(Utilities.base64Encode(blob.getBytes()));
   };
   
-   /**
-   * this is clone that will really be an extend
-   * @param {object} cloneThis
-   * @return {object} a clone
-   */
+  /**
+  * this is clone that will really be an extend
+  * @param {object} cloneThis
+  * @return {object} a clone
+  */
   ns.clone = function (cloneThis) {
     return ns.vanExtend ({} , cloneThis);
   }
@@ -411,24 +411,168 @@ var Utils = (function (ns) {
   }
   
   /**
-   * crush for writing to cache.props
-   * @param {string} crushThis the string to crush
-   * @return {string} the b64 zipped version
-   */
+  * crush for writing to cache.props
+  * @param {string} crushThis the string to crush
+  * @return {string} the b64 zipped version
+  */
   ns.crush = function (crushThis) {
     return Utilities.base64Encode(Utilities.zip ([Utilities.newBlob(JSON.stringify(crushThis))]).getBytes());
   };
-
+  
   /**
-   * uncrush for writing to cache.props
-   * @param {string} crushed the crushed string
-   * @return {string} the uncrushed string
-   */
+  * uncrush for writing to cache.props
+  * @param {string} crushed the crushed string
+  * @return {string} the uncrushed string
+  */
   ns.uncrush = function (crushed) {
     return Utilities.unzip(Utilities.newBlob(Utilities.base64Decode(crushed),'application/zip'))[0].getDataAsString();
   };
-
-
-
+  
+  /**
+  * find disconnected tables in a range of values
+  * @nameSpace FindTableRange
+  */
+  ns.findTableBlocks = function (values, options) {
+    
+    var MODES = {
+      cells:"cells",
+      position:"position"
+    };
+    
+    // set default options
+    options = ns.vanExtend ({
+      mode:MODES.cells,    // how to select the best block
+      rank:0              // if position 1 .. n, 0 (0 is the biggest), if size 1..n, (0 is the biggest)
+    }, options);
+    
+    // check the options are good
+    options.mode = options.mode.toLowerCase();
+    if (!MODES[options.mode]) {
+      throw 'invalid mode ' + options.mode + ':mode needs to be one of ' + Object.keys (MODES).map(function(k) { return MODES[k];}).join(",");
+    }
+    
+    if (!values || !Array.isArray(values) || !Array.isArray(values[0])) {
+      throw 'values must be an array of arrays as returned by getValues'
+    }
+    // use a fiddler for reviewing the data
+    var fiddler = new Fiddler()
+    .setHasHeaders(false)
+    .setValues (values.slice())
+    
+    var headers = fiddler.getHeaders();
+    var data = fiddler.getData();
+    
+    // get all the blank rows and columns, but get rid of any that are sequential
+    var blankRows = getBlankRows_ ()
+    //var blankColumns = getBlankColumns_();
+    
+    //there's an implied blank row & col at the end of the data
+    blankRows.push (fiddler.getNumRows());
+    
+    
+    // find the blocks of non blank data
+    var blocks = blankRows.reduce (function (p,c) {
+      // the block im working on
+      var current = p[p.length-1];
+      
+      // the number of rows will be the difference between the last start point and the blank row
+      current.size.rows = c - current.start.row;
+      
+      // a row might generate several column chunks
+      if (current.size.rows) {
+        var columnFiddler = new Fiddler()
+        .setHasHeaders(false)
+        .setValues(values.slice (current.start.row, current.size.rows + current.start.row))
+        
+        // get blank columns in this chunk           
+        var blankColumns = getBlankColumns_ (columnFiddler);
+        blankColumns.push (columnFiddler.getNumColumns());
+      }
+      else {
+        blankColumns = [0];
+      }
+      
+      blankColumns.forEach (function (d,i,a) {
+        current.size.columns = d - current.start.column;
+        
+        if (i<a.length) {
+          current = {start:{row:current.start.row ,column:d+1}, size: {rows:current.size.rows , columns:0}};
+          p.push(current);
+        }
+      });
+      
+      // get ready for next chunk
+      var up = {start:{row:c + 1 ,column:0}, size: {rows:0 , columns:0}};
+      p.push(up);
+      
+      return p;
+    } , [{start: {row:0,column:0},size:{rows:0,columns:0}}])
+    .filter(function (d) {
+      // get rid of the ones with no actual size
+      return d.size.rows >0 && d.size.columns >0;
+    })
+    .map (function (d,i) {
+      // add some useful things
+      d.a1Notation = columnLabelMaker(d.start.column + 1) + (d.start.row +1) + ":" 
+      + columnLabelMaker(d.start.column + d.size.columns ) + (d.start.row + d.size.rows);
+      d[MODES.cells] = d.size.columns * d.size.rows;
+      d[MODES.position] = i;
+      return d;
+    })
+    .sort (function (a,b) {
+      return a[options.mode] - b[options.mode];
+    });
+    
+    // this is the preferred one
+    var selected = blocks[options.rank ? options.rank -1 : blocks.length -1];
+    
+    // remove any data we don't need
+    Logger.log(fiddler.createValues());
+    fiddler
+    .filterRows(function (d, props) {
+      return props.rowOffset >= selected.start.row && props.rowOffset < selected.start.row + selected.size.rows;
+    })
+    .filterColumns(function (d,props) {
+      return props.columnOffset >= selected.start.column && props.columnOffset < selected.start.column + selected.size.columns;
+    });
+    Logger.log(fiddler.createValues());
+    return {
+      blankRows:blankRows,
+      blocks:blocks,
+      selected:{
+        block:selected,
+        values:fiddler.createValues()
+      }
+    };
+    
+    // get all the blank rows - will be an array of row indexes
+    function getBlankRows_ () {
+      return fiddler.getData().map(function (d,i) {
+        return i;
+      })
+      .filter (function (p) {
+        return Object.keys(data[p]).every (function (d) {
+          return data[p][d] === "";
+        });
+      });
+    }
+    
+    
+    //get all the blank columns in each row - will be an array of column indexes
+    function getBlankColumns_ (fid) {
+      
+      var h = fid.getHeaders();
+      return h.map(function (d,i) {
+        return i;
+      })
+      .filter(function (p) {
+        var uniqueValues = fid.getUniqueValues(headers[p]);
+        return !uniqueValues.length || uniqueValues.length === 1 && uniqueValues[0] === "";
+      });
+    }
+    
+    
+  }
+  
   return ns;
 }) (Utils || {});
