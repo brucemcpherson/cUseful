@@ -11,7 +11,8 @@ var Fiddler = function () {
       headerOb_ , 
       dataOb_=[],
       hasHeaders_ = true,
-      functions_;
+      functions_,
+      renameDups_ = true;
   
   
   /**
@@ -168,6 +169,9 @@ var Fiddler = function () {
     return self;
   };
 
+  self.setRenameDups = function (rename) {
+    renameDups_ = rename;
+  };
   /**
    * get the unique values in a column
    * @param {string} columnName
@@ -775,8 +779,13 @@ var Fiddler = function () {
    * @return {Fiddle} self
    */
   self.init = function () {
-    headerOb_ = makeHeaderOb_();
-    dataOb_ = makeDataOb_();
+    if (values_) {
+      headerOb_ = makeHeaderOb_();
+      dataOb_ = makeDataOb_();
+    }
+    else {
+      headerOb_ = dataOb_ = null;
+    }
     return self;
   };
   
@@ -805,7 +814,7 @@ var Fiddler = function () {
    */
   self.setValues = function (values) {
     values_= values;
-    return self.init();
+    return self.init() ;
   };
   
   /**
@@ -831,16 +840,28 @@ var Fiddler = function () {
    */
   function makeHeaderOb_ () {
     
-    return values_.length ? 
+    return values_ && values_.length ? 
       ((self.hasHeaders() ? 
        values_[0] : values_[0].map(function(d,i) {
          return columnLabelMaker_ (i+1);
        }))
     .reduce (function (p,c) {
       var key = c.toString();
-      if (p.hasOwnProperty(key)) {
-        throw 'duplicate column header ' + key;
+      
+      if (p.hasOwnProperty(key) ) {
+        if(!renameDups_) {
+          throw 'duplicate column header ' + key;
+        }
+        else {
+          // generate a unique name
+          var nd = 1;
+          while (p.hasOwnProperty(key+nd)) {
+            nd++;
+          }
+          key = key+nd;
+        }
       }
+      
       p[key]=Object.keys(p).length;
       return p;
     },{})) : null;
