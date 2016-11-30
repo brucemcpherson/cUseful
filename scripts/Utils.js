@@ -1,3 +1,4 @@
+
 /**
 * libary for use with Going Gas Videos
 * Utils contains useful functions 
@@ -442,7 +443,9 @@ var Utils = (function (ns) {
     // set default options
     options = ns.vanExtend ({
       mode:MODES.cells,    // how to select the best block
-      rank:0              // if position 1 .. n, 0 (0 is the biggest), if size 1..n, (0 is the biggest)
+      rank:0,               // if position 1 .. n, 0 (0 is the biggest), if size 1..n, (0 is the biggest)
+      rowTolerance:0,      // allow  blank row & column to be part of the data
+      columnTolerance:0    
     }, options);
     
     // check the options are good
@@ -463,13 +466,13 @@ var Utils = (function (ns) {
     var data = fiddler.getData();
     
     // get all the blank rows and columns, but get rid of any that are sequential
-    var blankRows = getBlankRows_ ()
-    //var blankColumns = getBlankColumns_();
+    var blankRows = getBlankRows_ ();
+    
     
     //there's an implied blank row & col at the end of the data
     blankRows.push (fiddler.getNumRows());
     
-    
+    //
     // find the blocks of non blank data
     var blocks = blankRows.reduce (function (p,c) {
       // the block im working on
@@ -480,9 +483,10 @@ var Utils = (function (ns) {
       
       // a row might generate several column chunks
       if (current.size.rows) {
+
         var columnFiddler = new Fiddler()
         .setHasHeaders(false)
-        .setValues(values.slice (current.start.row, current.size.rows + current.start.row))
+        .setValues(values.slice (current.start.row, current.size.rows + current.start.row));
         
         // get blank columns in this chunk           
         var blankColumns = getBlankColumns_ (columnFiddler);
@@ -513,8 +517,8 @@ var Utils = (function (ns) {
     })
     .map (function (d,i) {
       // add some useful things
-      d.a1Notation = columnLabelMaker(d.start.column + 1) + (d.start.row +1) + ":" 
-      + columnLabelMaker(d.start.column + d.size.columns ) + (d.start.row + d.size.rows);
+      d.a1Notation = ns.columnLabelMaker(d.start.column + 1) + (d.start.row +1) + ":" 
+      + ns.columnLabelMaker(d.start.column + d.size.columns ) + (d.start.row + d.size.rows);
       d[MODES.cells] = d.size.columns * d.size.rows;
       d[MODES.position] = i;
       return d;
@@ -547,14 +551,24 @@ var Utils = (function (ns) {
     
     // get all the blank rows - will be an array of row indexes
     function getBlankRows_ () {
-      return fiddler.getData().map(function (d,i) {
+      return fiddler.getData()
+      .map(function (d,i) {
         return i;
       })
       .filter (function (p) {
         return Object.keys(data[p]).every (function (d) {
           return data[p][d] === "";
         });
+      })
+      .filter (function (d,i,a) {
+        // if they are all blank for the row tolerance
+        // the the filtered index will be equal to 
+        // the current value + rowTolerace
+        // but we dont want to tolerate blank leading rows, so they are always blank.
+        return a[i+options.rowTolerance] === d+options.rowTolerance || 
+          a.slice(0,i+1).every(function(p,j) { return j === p; });
       });
+
     }
     
     
@@ -568,11 +582,15 @@ var Utils = (function (ns) {
       .filter(function (p) {
         var uniqueValues = fid.getUniqueValues(headers[p]);
         return !uniqueValues.length || uniqueValues.length === 1 && uniqueValues[0] === "";
+      })
+      .filter (function (d,i,a) {
+        return a[i+options.columnTolerance] === d+options.columnTolerance || 
+          a.slice(0,i+1).every(function(p,j) { return j === p; });
       });
+     
     }
     
     
-  }
-  
+  };
   return ns;
 }) (Utils || {});
