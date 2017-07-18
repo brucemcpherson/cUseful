@@ -3,8 +3,9 @@
 * values obtained from setValues method 
 * of a spreadsheet
 * @contructor Fiddler
+* @param {Sheet} [sheet=null] populate the fiddler 
 */
-function Fiddler() {
+function Fiddler(sheet) {
   
   var self = this;
   var values_,
@@ -14,7 +15,8 @@ function Fiddler() {
       functions_,
       renameDups_ = true,
       renameBlanks_ = true,
-      blankOffset_ = 0;
+      blankOffset_ = 0,
+      sheet_ = null;
   
   /**
   * these are the default iteration functions
@@ -107,6 +109,24 @@ function Fiddler() {
   
   // maybe a later version we'll allow changing of default functions
   functions_ = defaultFunctions_;
+  
+  /**
+  * @param {Sheet} sheet
+  */
+  self.setSheet = function (sheet) {
+    sheet_ = sheet;
+    return self;
+  };
+  
+  /**
+  * @return {Sheet} sheet
+  */
+  self.getSheet = function (sheet) {
+    return sheet_ ;
+  };
+  
+  
+  
   
   /// ITERATION FUNCTIONS
   /**
@@ -532,11 +552,43 @@ function Fiddler() {
   };
   
   /**
+   * given a sheet, will populate
+   * @param {Sheet} sheet
+   */
+  self.populate = function (sheet) {
+    
+    // first set the default sheet
+    self.setSheet (sheet);
+    
+    // get the range 
+    var range = sheet.getDataRange();
+    
+    // set the values
+    return self.setValues (range.getValues());
+    
+  };
+  
+  /**
+   * dump values with default values 
+   * @param {Sheet} [sheet=null] the start range to dump it to
+   */
+  self.dumpValues = function (sheet) {
+    
+    var range =(sheet || sheet_).getDataRange();
+    range.clearContent();
+    if (self.getData().length) {
+      self.getRange(range).setValues (self.createValues());
+    }
+    return self;                       
+  };
+  /**
   * get the range required to write the values starting at the given range
-  * @param {Range} range the range
+  * @param {Range} [range=null] the range
   * @return {Range} the range needed
   */
   self.getRange = function(range) {
+    if (!range && !sheet_) throw 'must set a default sheet or specify a range';
+    range = range || sheet_.getDataRange();
     return range.offset(0, 0, self.getNumRows() + (self.hasHeaders() ? 1 : 0), self.getNumColumns());
   }
   /**
@@ -981,6 +1033,11 @@ function Fiddler() {
   function columnLabelMaker_(columnNumber, s) {
     s = String.fromCharCode(((columnNumber - 1) % 26) + 'A'.charCodeAt(0)) + (s || '');
     return columnNumber > 26 ? columnLabelMaker_(Math.floor((columnNumber - 1) / 26), s) : s;
+  }
+  
+  // constructor will populate if a sheet is given
+  if (sheet) {
+    self.populate(sheet);
   }
   
 };
