@@ -35,6 +35,16 @@ function Fiddler(sheet) {
   */
   var defaultFunctions_ = {
     
+   /**
+    * used to compare two values
+    * @param {*} a itema
+    * @param {*} b item b
+    * @return {boolean} whether the same
+    */
+    compareFunc: function(a,b) {
+      return a===b;
+    },
+    
     /**
     * used to filter rows
     * @param {object} row the row object
@@ -202,26 +212,40 @@ function Fiddler(sheet) {
     blankOffset_ = off;
     return self;
   };
+  
   /**
   * get the unique values in a column
   * @param {string} columnName
+  * @param {function} [compareFunc]
   * @return {[*]} array of unique values
   */
-  self.getUniqueValues = function(columnName) {
+  self.getUniqueValues = function(columnName, compareFunc) {
     
-    return self.getColumnValues(columnName).filter(function(d, i, a) {
-      return a.indexOf(d) === i;
+    return self.getColumnValues(columnName)
+    .filter(function(d, i, a) {
+      return axof_ (d , a, compareFunc) === i;
     });
     
   };
+  
+  // like indexof except with custom compare
+  function axof_ ( value , arr, compareFunc ) {
+    var cf = checkAFunc(compareFunc) || functions_.compareFunc;
+    for (var i = 0 ; i < arr.length ; i++) {
+       if (cf  (value , arr[i])) return i;
+    }
+    return -1;
+  }                                                
+                                                   
   
   /**
   * iterate through each row - nodifies the data in this fiddler instance
   * @param {[string]} [columnNames] optional which column names to use (default is all)
   * @param {boolean} [keepLast=false] whether to keep the last row or the first found
+  * @param {function} [compareFunc] compare values function
   * @return {Fiddler} self
   */
-  self.filterUnique = function(columnNames, keepLast) {
+  self.filterUnique = function(columnNames, keepLast, compareFunc) {
     
     var headers = self.getHeaders();
     cols = columnNames || headers;
@@ -229,30 +253,30 @@ function Fiddler(sheet) {
     
     // may need to reverse
     var data = dataOb_.slice();
-    if (!keepLast && columnNames) {
-      data.reverse();
-    }
+
     // check params are valid
     if (cols.some(function(d) {
       return headers.indexOf(d) === -1;
     })) {
       throw 'unknown columns in ' + JSON.stringify(cols) + ' compared to ' + JSON.stringify(headers);
     }
-    
+
     // filter out dups
     data = data.filter(function(d, i, a) {
-      return !a.slice(i + 1).some(function(e) {
+      // if we're keeping the first one, then keep only if there's none before
+      // if the last one, then keep only if there are none following
+      var soFar = keepLast ? a.slice (i+1) : a.slice (0 , i);
+      
+      return !soFar.some(function(e) {
         return cols.every(function(f) {
-          return d[f] === e[f];
+          return (checkAFunc(compareFunc) || functions_.compareFunc)  (d[f] , e[f]);
         });
       });
+
     });
     
-    // reverse again
-    if (!keepLast && columnNames) {
-      data.reverse();
-    }
-    
+
+   
     // register
     dataOb_ = data;
     return self;
@@ -1038,6 +1062,10 @@ function Fiddler(sheet) {
   // constructor will populate if a sheet is given
   if (sheet) {
     self.populate(sheet);
+  }
+  
+  else if (typeof sheet !== typeof undefined) {
+    throw 'sheet was passed in constructor but could not be opened';
   }
   
 };
