@@ -592,5 +592,25 @@ var Utils = (function (ns) {
     
     
   };
+  
+  function curry (func) {
+    
+    // get the arguments and stop the first
+    var args = Array.prototype.slice.call (arguments,1);
+    
+    // if there's no more, the call the func and we're done
+    // otherwise we need to create a new curry function with the latest verstion
+    // of the arguments
+    return args.length === func.length ? 
+      func.apply (undefined , args) :
+    curry.bind.apply ( curry , [this , func].concat (args));  
+    
+  };
+  
+  ns.curry = function () {
+    return curry.apply ( null , Array.prototype.slice.call (arguments));
+  }
+
+
   return ns;
 }) (Utils || {});
