@@ -136,7 +136,8 @@ var Utils = (function (ns) {
             "User Rate Limit Exceeded",
             "Exception: ???????? ?????: DriveApp.",
             "Exception: Address unavailable",
-            "Exception: Timeout"
+            "Exception: Timeout",
+            "GoogleJsonResponseException: Rate Limit Exceeded" 
            ]
     .some(function(e){
       return  errorText.toString().slice(0,e.length) == e  ;
