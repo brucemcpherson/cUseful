@@ -326,6 +326,16 @@ function Fiddler(sheet) {
     });
     
   };
+  /**
+   * sort returns sorted values
+   * for chaining , can be handy to return the fiddler
+   */
+  self.sortFiddler = function (name , descending , auxFiddler ) {
+    var data = self.sort (name , descending , auxFiddler);
+    self.setData (data);
+    return self;
+  }
+  
   self.handySort = function (displayValues, options) {
     // default comparitor & extractor
     options = options || {};
@@ -901,7 +911,8 @@ function Fiddler(sheet) {
   self.setData = function(dataOb) {
     
     // need to calculate new headers
-    headerOb_ = dataOb.reduce(function(hob, row) {
+    
+    headerOb_ = (dataOb || []).reduce(function(hob, row) {
       Object.keys(row).forEach(function(key) {
         if (!hob.hasOwnProperty(key)) {
           hob[key] = Object.keys(hob).length;
