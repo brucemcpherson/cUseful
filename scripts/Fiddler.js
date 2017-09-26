@@ -176,6 +176,7 @@ function Fiddler(sheet) {
   self.mapRows = function(func) {
     
     dataOb_ = dataOb_.map(function(row, rowIndex) {
+      var rowLength = Object.keys(row).length;
       var result = (checkAFunc(func) || functions_.mapRows)(row, {
         name: rowIndex,
         data: dataOb_,
@@ -189,11 +190,17 @@ function Fiddler(sheet) {
         row: row
       });
       
-      if (!result || result.length !== row.length) {
+      if (!result || typeof result !== "object") {
+        throw new Error ("you need to return the row object - did you forget?");
+      }
+      
+      if (Object.keys(result).length !== rowLength) {
         throw new Error(
           'you cant change the number of columns in a row during map items'
         );
       }
+      
+      
       return result;
     });
     
