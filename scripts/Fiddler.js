@@ -785,7 +785,7 @@ function Fiddler(sheet) {
         if (Object.keys(data[i]).some(function(d) {
           return !e.hasOwnProperty(d);
         })) {
-          throw new Error('unknown columns in row data to insert');
+          throw new Error('unknown columns in row data to insert:' + JSON.stringify(Object.keys(data[i])));
         }
         
       });
