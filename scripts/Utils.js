@@ -356,40 +356,41 @@ var Utils = (function (ns) {
   */
   ns.clone = function (cloneThis) {
     return ns.vanExtend ({} , cloneThis);
-  }
+  };
+  
   /**
- * a short cut to add nested properties to a an object
- * @param {object} [base] the base object
- * @param {string} propertyScheme something like "a.b.c" will extend as necessary
- * @return {object} base updated
- */
- ns.propify = function (propertyScheme ,base) {
-  
-  // if base not specified, create it
-  if (typeof base === typeof undefined) base = {};
-  
-  // make sure its an object
-  if (typeof base !== typeof {} ) throw 'vanPropify:base needs to be an object';
-  
-  // work through the scheme
-  (propertyScheme || "").split (".")
-    .reduce (function (p,c) {
+   * a short cut to add nested properties to a an object
+   * @param {object} [base] the base object
+   * @param {string} propertyScheme something like "a.b.c" will extend as necessary
+   * @return {object} base updated
+   */
+   ns.propify = function (propertyScheme ,base) {
     
-      // add a branch if not already existing
-      if (typeof p[c] === typeof undefined) p[c] = {};
+    // if base not specified, create it
+    if (typeof base === typeof undefined) base = {};
+    
+    // make sure its an object
+    if (typeof base !== typeof {} ) throw 'propify:base needs to be an object';
+    
+    // work through the scheme
+    (propertyScheme || "").split (".")
+      .reduce (function (p,c) {
       
-      // make sure we're not overwriting anything
-      if (typeof p[c] !== typeof {}) throw 'vanPropify:branch ' + c + ' not an object in ' + propertyScheme;
-      
-      // move down the branch
-      return p[c];
-
-    } , base);
+        // add a branch if not already existing
+        if (typeof p[c] === typeof undefined) p[c] = {};
+        
+        // make sure we're not overwriting anything
+        if (typeof p[c] !== typeof {}) throw 'propify:branch ' + c + ' not an object in ' + propertyScheme;
+        
+        // move down the branch
+        return p[c];
   
-  // now should have the required shape
-  return base;
-
-}
+      } , base);
+    
+    // now should have the required shape
+    return base;
+  
+  };
 
   /**
   * recursively extend an object with other objects
