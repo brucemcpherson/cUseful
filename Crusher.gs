@@ -1,6 +1,4 @@
-// because this is in the cUseful library, setting cUseful ns to here
-// if you are writing plugins outside of cUseful, remove this line
-var cUseful = this;
+
 // plugins for Squeeze service 
 function CrusherPluginCacheService () {
 
@@ -30,13 +28,13 @@ function CrusherPluginCacheService () {
     settings_.chunkSize = settings_.chunkSize || 100000;
     
     // respect digest can reduce the number of chunks read, but may return stale
-    settings_.respectDigest = cUseful.Utils.isUndefined (settings_.respectDigest) ? false : settings_.respectDigest;
+    settings_.respectDigest = Utils.isUndefined (settings_.respectDigest) ? false : settings_.respectDigest;
     
     // must have a cache service and a chunksize
     checkStore();
 
     // now initialize the squeezer
-    self.squeezer = new cUseful.Squeeze.Chunking ()
+    self.squeezer = new Squeeze.Chunking ()
       .setStore (settings_.store)
       .setChunkSize(settings_.chunkSize)   
       .funcWriteToStore(write)
@@ -65,7 +63,7 @@ function CrusherPluginCacheService () {
    */
   function remove (store, key) {
     checkStore();
-    return cUseful.Utils.expBackoff(function () { 
+    return Utils.expBackoff(function () { 
       return store.remove (key); 
     });
   }
@@ -80,7 +78,7 @@ function CrusherPluginCacheService () {
    */
   function write (store,key,str,expiry) {
     checkStore();
-    return cUseful.Utils.expBackoff(function () { 
+    return Utils.expBackoff(function () { 
       return expiry ? store.put (key , str ,expiry ) : store.put (key,str); 
     });
     
@@ -94,7 +92,7 @@ function CrusherPluginCacheService () {
    */
   function read (store,key) {
     checkStore();
-    return cUseful.Utils.expBackoff(function () { 
+    return Utils.expBackoff(function () { 
       return store.get (key); 
     });
   }
@@ -131,13 +129,13 @@ function CrusherPluginPropertyService () {
     settings_.chunkSize = settings_.chunkSize || 9000;
     
     // respect digest can reduce the number of chunks read, but may return stale
-    settings_.respectDigest = cUseful.Utils.isUndefined (settings_.respectDigest) ? false : settings_.respectDigest;
+    settings_.respectDigest = Utils.isUndefined (settings_.respectDigest) ? false : settings_.respectDigest;
     
     // must have a cache service and a chunksize
     checkStore();
 
     // now initialize the squeezer
-    self.squeezer = new cUseful.Squeeze.Chunking ()
+    self.squeezer = new Squeeze.Chunking ()
       .setStore (settings_.store)
       .setChunkSize(settings_.chunkSize)   
       .funcWriteToStore(write)
@@ -165,7 +163,7 @@ function CrusherPluginPropertyService () {
    */
   function remove (store, key) {
     checkStore();
-    return cUseful.Utils.expBackoff(function () { 
+    return Utils.expBackoff(function () { 
       return store.deleteProperty (key); 
     });
   }
@@ -179,7 +177,7 @@ function CrusherPluginPropertyService () {
    */
   function write (store,key,str) {
     checkStore();
-    return cUseful.Utils.expBackoff(function () { 
+    return Utils.expBackoff(function () { 
       return store.setProperty (key , str  ); 
     });
     
@@ -193,7 +191,7 @@ function CrusherPluginPropertyService () {
    */
   function read (store,key) {
     checkStore();
-    return cUseful.Utils.expBackoff(function () { 
+    return Utils.expBackoff(function () { 
       return store.getProperty (key); 
     });
   }
