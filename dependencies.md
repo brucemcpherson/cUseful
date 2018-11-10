@@ -1,5 +1,5 @@
 # Google Apps Script Project: cUseful
-This repo (cUseful) was automatically updated on 01 November 2018 11:02:31 GMT by GasGit
+This repo (cUseful) was automatically updated on 10 November 2018 12:37:36 GMT by GasGit
 
 For more information see the [desktop liberation site](http://ramblings.mcpher.com/Home/excelquirks/drivesdk/gettinggithubready "desktop liberation") or [contact me on G+](https://plus.google.com/+BruceMcpherson "Bruce McPherson - GDE")
 ## Details for Apps Script project cUseful
@@ -30,6 +30,7 @@ Images| server_js
 Flattener| server_js
 Crusher| server_js
 Fetcheroo| server_js
+Tester| server_js
 ### Directly referenced libraries
 no libraries discovered
 ### All dependencies and sub dependencies
