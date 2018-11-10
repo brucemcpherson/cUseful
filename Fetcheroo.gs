@@ -73,9 +73,23 @@ var Fetcheroo = function () {
     }
   };
 
-    
-  self.enableCaching = function (enable) {
-    self.settings.fetcheroo.enableCaching = enable;
+  /**
+   * get caching 
+   * whether its enabled or not
+   * @return {boolean}
+   */
+  self.getCaching = function () {
+    return self.settings.fetcheroo.enableCaching;
+  };
+  
+  /**
+   * set caching
+   * @param {boolean} enable whether to enable or disable caching
+   * @return self
+   */
+  self.setCaching = function (enable) {
+    if (Utils.isUndefined(enable)) throw 'must specify true or false to enable caching';
+    self.settings.fetcheroo.enableCaching = enable ? true : false;
     return self;
   };  
   
@@ -118,7 +132,8 @@ var Fetcheroo = function () {
     
     const text = result.getContentText();
     rob.code = result.getResponseCode();
-
+    rob.responseHeaders = result.getAllHeaders();
+   
     // standard good/bad errors
     if (rob.code < 200 || rob.code >= 300) {
       rob.error = text;
@@ -128,6 +143,7 @@ var Fetcheroo = function () {
     else {
       try {
         rob.data = JSON.parse(text);
+        rob.text = text;
       }
       //that didnt work, so get the blob.
       catch (err) {
@@ -168,14 +184,15 @@ var Fetcheroo = function () {
     const dft = self.settings.request;
     const token = fs.tokenRequired && tokenService();
     if (fs.tokenRequired && !token) throw 'token required - use set token';
-    
+
     // add options
     var options = utils.vanExtend ({
       method: dft.method,
       headers: dft.headers,
       muteHttpExceptions: true
-    }, request.options);
-                            
+    }, request);
+    
+    
     // normalize                     
     options.method = options.method.toUpperCase();
     if (token)options.headers.Authorization = "Bearer " + token;
@@ -197,10 +214,11 @@ var Fetcheroo = function () {
       else {
         options.payload = body;
       }
+
     }
     // do the request and page it if required
     const url = dft.protocol + "//" + dft.hostName+ ":" + dft.port + dft.version;
-    
+
     return self.paging ( {
       url: url,
       startPath: path,
@@ -237,17 +255,17 @@ var Fetcheroo = function () {
     var cleanData = request.cleanData || fs.cleanData ;
     var setPageSize = request.setPageSize || fs.setPageSize;
     var limit = request.limit ;
-    
+   
     // get a digest for caching GET and see if its in cache
     const digest = options.method === "GET" && self.cc  ? keyDigest (url , startPath , options, query , limit + "") : "";
-    var cached = digest && fs.enableCaching && self.cc.get (digest);
-    if (digest && !fs.enableCaching) {
+    var cached = digest && self.getCaching() && self.cc.get (digest);
+    if (digest && !self.getCaching()) {
       // delete previous as it'll potentially be stale compared to this fetch
       self.cc.remove (digest);
     }
 
     // paging request final result
-    var final={data:[], code:200, wasCached:cached ? true : false};
+    var final={data:[], text: "" , code:200, responseHeaders: null , wasCached:cached ? true : false};
     
     // if it wasn't in cache
     if (!cached) {
@@ -279,7 +297,7 @@ var Fetcheroo = function () {
             
             // clean up the data for this kind of result
             result = cleanData (result);
-            
+
             // clean data is supposed to maintain an array of results in result.data
             if (result.data) {
               if (!Array.isArray (result.data)) throw 'cleandata should have created an array of results in result.data';
@@ -293,7 +311,7 @@ var Fetcheroo = function () {
       
       // all data to cache
       if (!allErrors.length) { 
-        if (digest && fs.enableCaching) {
+        if (digest && self.getCaching()) {
             self.cc.put ( digest , allData , self.settings.fetcheroo.cacheSeconds );
         }
         final.data = allData;
