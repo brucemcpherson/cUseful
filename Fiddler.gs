@@ -16,7 +16,8 @@ function Fiddler(sheet) {
       renameDups_ = true,
       renameBlanks_ = true,
       blankOffset_ = 0,
-      sheet_ = null;
+      sheet_ = null,
+      headerFormat_ = {};
   
   /**
   * these are the default iteration functions
@@ -131,7 +132,7 @@ function Fiddler(sheet) {
   /**
   * @return {Sheet} sheet
   */
-  self.getSheet = function (sheet) {
+  self.getSheet = function () {
     return sheet_ ;
   };
   
@@ -289,7 +290,62 @@ function Fiddler(sheet) {
     return self;
     
   };
+  /**
+   * set header format
+   * @param {object} headerFormat {backgrounds:'string',fontColors:'string',wraps:boolean,fontWeights:'string'}
+   * @return self
+   */
+  self.setHeaderFormat = function (headerFormat) {
+    headerFormat_ = headerFormat;
+    return self;
+  };
   
+  /**
+   * applies  formats
+   * @param {object} format eg .. {backgrounds:'string',fontColors:'string',wraps:boolean,fontWeights:'string'}
+   * @param {Range}
+   * @return {range}
+   */
+  self.setFormats = function (range, format) {
+    // if there's anything to do
+    if(range.getNumColumns() && range.getNumRows()){
+      // for every format mentioned
+      Object.keys(format).forEach (function (f) {
+        // create an array the same shape as the range
+        var values = new Array (range.getNumRows()).slice().map (function () {
+          return new Array(range.getNumColumns()).slice().map (function () {
+            // filled with the required values
+            return format[f];
+          })
+        });
+        // check method exists and apply it
+        var method = 'set'+f.slice(0,1).toUpperCase()+f.slice(1);
+        if (typeof range[method] !== "function") throw 'unknown format ' + method;
+        range[method](values);
+      });
+    }
+    return self;
+  };
+  
+  /**
+   * apply header formats
+   * @param {range} range the start range for the headers
+   * @param {object} [format=headerFormat_] the format object
+   * @return self;
+   */
+  self.applyHeaderFormat = function (range, format) {
+    if (!self.getNumColumns()) return self;
+    format = format || headerFormat_;
+    return self.setFormats (range.offset(0,0,1,self.getNumColumns()), headerFormat_); 
+  };
+  /**
+   * get header format
+   * @return self
+   */
+  self.setHeaderFormat = function (headerFormat) {
+    headerFormat_ = headerFormat || {};
+    return self;
+  };
   /**
   * iterate through each row - nodifies the data in this fiddler instance
   * @param {function} [func] optional function that shoud return true if the row is to be kept
@@ -615,12 +671,21 @@ function Fiddler(sheet) {
    * @param {Sheet} [sheet=null] the start range to dump it to
    */
   self.dumpValues = function (sheet) {
-    if (!sheet || sheet_) throw 'sheet not found to dump values to';
+
+    if (!sheet && !sheet_) throw 'sheet not found to dump values to';
     var range =(sheet || sheet_).getDataRange();
     range.clearContent();
-    if (self.getData().length) {
-      self.getRange(range).setValues (self.createValues());
-    }
+
+    // we only do something if there's anydata
+    var r = self.getRange(range);
+    var v = self.createValues();
+    
+    // write out the sheet if there's anything
+    if (v.length && v[0].length) r.setValues (v);
+
+    // do header formats
+    if (v[0].length)self.applyHeaderFormat(range);
+    
     return self;                       
   };
   /**
@@ -631,7 +696,8 @@ function Fiddler(sheet) {
   self.getRange = function(range) {
     if (!range && !sheet_) throw 'must set a default sheet or specify a range';
     range = range || sheet_.getDataRange();
-    return range.offset(0, 0, self.getNumRows() + (self.hasHeaders() ? 1 : 0), self.getNumColumns());
+    // simulate a single cell range for a blank sheet
+    return self.getNumColumns() ? range.offset(0, 0, self.getNumRows() + (self.hasHeaders() ? 1 : 0), self.getNumColumns()) : range.offset (0,0,1,1);
   }
   /**
   * move a column before
@@ -997,35 +1063,43 @@ function Fiddler(sheet) {
   */
   function makeHeaderOb_() {
     
-    return values_ && values_.length ?
-      ((self.hasHeaders() ?
-        values_[0] : values_[0].map(function(d, i) {
-          return columnLabelMaker_(i + 1);
-        }))
-       .reduce(function(p, c) {
-         
-         var key = c.toString();
-         if (renameBlanks_ && !key) {
-           // intercept blank name and use column a notation for it
-           key = columnLabelMaker_(Object.keys(p).length + 1 + blankOffset_);
-           
-         }
-         if (p.hasOwnProperty(key)) {
-           if (!renameDups_) {
-             throw 'duplicate column header ' + key;
-           } else {
-             // generate a unique name
-             var nd = 1;
-             while (p.hasOwnProperty(key + nd)) {
-               nd++;
-             }
-             key = key + nd;
-           }
-         }
-         
-         p[key] = Object.keys(p).length;
-         return p;
-       }, {})) : null;
+    // headers come from first row normally
+    var firstRow = values_ && values_.length ? values_[0] : [];
+    // problem is that values in sheets will always be [[""]] for an empty sheet
+    // so to avoid interpresting that as a single column with no header
+    if (firstRow.length === 1 && firstRow[0] === "") firstRow = [];
+
+    // create headers from firstrow (or generate if no headers)
+    var rob=  (self.hasHeaders() ?
+               firstRow : firstRow.map(function(d, i) {
+                 return columnLabelMaker_(i + 1);
+               }))
+    .reduce(function(p, c) {
+      
+      var key = c.toString();
+      if (renameBlanks_ && !key) {
+        // intercept blank name and use column a notation for it
+        key = columnLabelMaker_(Object.keys(p).length + 1 + blankOffset_);
+        
+      }
+      if (p.hasOwnProperty(key)) {
+        if (!renameDups_) {
+          throw 'duplicate column header ' + key;
+        } else {
+          // generate a unique name
+          var nd = 1;
+          while (p.hasOwnProperty(key + nd)) {
+            nd++;
+          }
+          key = key + nd;
+        }
+      }
+      
+      p[key] = Object.keys(p).length;
+      return p;
+    }, {});
+
+    return rob;
     
   }
   
@@ -1055,17 +1129,16 @@ function Fiddler(sheet) {
   function makeValues_() {
     
     // add the headers if there are any
-    var vals = self.hasHeaders() ? [Object.keys(headerOb_)] : [];
-    
+    var vals = [self.hasHeaders() ? Object.keys(headerOb_) : []];
+   
     // put the kv pairs back to values
-    dataOb_.forEach(function(row) {
-      vals.push(Object.keys(headerOb_).reduce(function(p, c) {
-        p.push(row[c]);
-        return p;
-      }, []));
-    });
-    
-    return vals;
+    return dataOb_.reduce (function (p,row) {
+      Array.prototype.push.apply (p , [vals[0].map (function (d) {
+        return typeof row[d] === typeof undefined || row[d] === null ? "" : row[d];
+      })]);
+      return p;
+    },vals);
+
   }
   
   /**
