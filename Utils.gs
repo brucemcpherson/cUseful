@@ -475,6 +475,38 @@ var Utils = (function (ns) {
   };
   
   /**
+   * find the index of an item in an array
+   * @param {[*]} arr the array
+   * @param {function} func the compare func ( received item, index, arr)
+   * @return {number} the index
+   */
+  ns.findIndex = function ( arr ,func) {
+    var k = 0;
+    
+    if (!Array.isArray (arr)) throw 'findIndex arg should be an array';
+    if (typeof func !== "function") throw 'findindex predictate should be a function';
+    while (k < arr.length) {
+      if (func (arr[k] , k , arr)) {
+        return k;
+      }
+      k++;
+    }
+    return -1;
+  };
+  
+  /**
+   * find the item in an array
+   * @param {[*]} arr the array
+   * @param {function} func the compare func ( received item, index, arr)
+   * @return {number} the index
+   */
+  ns.find = function ( arr ,func) {
+    
+    var k = ns.find (arr , func );
+    return k === -1 ? undefined : arr[k];
+  };
+  
+  /**
   * find disconnected tables in a range of values
   * @nameSpace FindTableRange
   */
