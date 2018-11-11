@@ -17,7 +17,8 @@ function Fiddler(sheet) {
       renameBlanks_ = true,
       blankOffset_ = 0,
       sheet_ = null,
-      headerFormat_ = {};
+      headerFormat_ = {},
+      columnFormats_ = null;
   
   /**
   * these are the default iteration functions
@@ -301,6 +302,55 @@ function Fiddler(sheet) {
   };
   
   /**
+   * sort out a list of column names and throw if any invalid
+   * @param {[string]} [columnNames] can be an array, single or undefined for all
+   * @return {[string]} an array of column names
+   */
+  function patchColumnNames_ ( columnNames ) {
+    // undefined columnNames means them all
+    // names can be a single column or an array
+    var headers = self.getHeaders(); 
+    columnNames = typeof columnNames === typeof undefined ? headers : (Array.isArray(columnNames) ? columnNames : [columnNames] );
+    var bad = columnNames.filter (function (d) {
+      return headers.indexOf (d) === -1;
+    });
+    if (bad.length) throw "these columnNames don't exist " + bad.join (",");
+    return columnNames;
+  }
+  
+  /**
+   * clear given column formats
+   */
+  self.clearColumnFormats = function (columnNames) {
+    columnFormats_ = columnFormats_ || {};
+    patchColumnNames_ (columnNames)
+    .forEach (function (d) {
+      columnFormats_ [d] = null;
+    });
+    return self;
+  };
+  /**
+   * get all known columnFormats
+   */
+  self.getColumnFormats = function () {
+    return columnFormats_;
+  };
+  /**
+   * set column format 
+   * @param {object} columnFormat eg{backgrounds:'string',fontColors:'string',wraps:boolean,fontWeights:'string'}
+   * @param {[string]} [columnNames=all] default is it applies to all current columns
+   * @return self
+   */
+  self.setColumnFormat = function (columnFormat, columnNames) {
+    // validate them
+    columnNames = patchColumnNames_ (columnNames);
+    // a non-null column format means we have an outstanding thing on next nump
+    columnFormats_ = columnFormats_ || {};
+    // apply them
+    columnNames.forEach (function (d) { columnFormats_[d] = columnFormat });
+    return self;
+  };
+  /**
    * applies  formats
    * @param {object} format eg .. {backgrounds:'string',fontColors:'string',wraps:boolean,fontWeights:'string'}
    * @param {Range}
@@ -318,10 +368,12 @@ function Fiddler(sheet) {
             return format[f];
           })
         });
+       
         // check method exists and apply it
         var method = 'set'+f.slice(0,1).toUpperCase()+f.slice(1);
         if (typeof range[method] !== "function") throw 'unknown format ' + method;
         range[method](values);
+     
       });
     }
     return self;
@@ -338,14 +390,74 @@ function Fiddler(sheet) {
     format = format || headerFormat_;
     return self.setFormats (range.offset(0,0,1,self.getNumColumns()), headerFormat_); 
   };
+    
+  /**
+   * apply column formats
+   * @param {range} the start range
+   * @param {object} [format=columnFormats_] the format objects
+   * @return self;
+   */
+  self.applyColumnFormats = function (range )  {
+    if ( columnFormats_ ) {
+      // we'll need this later
+      var dr = range.getSheet().getDataRange();
+      /// make space for the header
+      if (self.hasHeaders() && dr.getNumRows()) {
+        dr = dr.offset (1,0,dr.getNumRows()-1);
+      }
+      if (Object.keys (columnFormats_).length === 0) {
+        // this means clear format for entire thing
+        dr.clearFormat();
+        // wont bother next time
+        columnFormats_ = null;
+      }
+      else {
+        // first clear the bottom part of the sheet with no data
+        if (dr.getNumRows() > self.getNumRows()) {
+          dr.offset ( self.getNumRows() - dr.getNumRows() , 0 , dr.getNumRows() - self.getNumRows()).clearFormat();
+        }
+        
+        // TODO optimize common formats on adjacent columns to single set
+        // for now  1 at a time.
+        if (self.getNumRows() ) {
+          Object.keys(columnFormats_)
+          .forEach (function (d) {
+            var o = columnFormats_ [d];
+            // validate still exists
+            var h = self.getHeaders().indexOf(d);
+            if (h !== -1 ) {
+              // set the range for the data
+              var r = dr.offset (0,h, self.getNumRows() , 1);
+              if (!o) {
+                // its a clear
+                r.clearFormat();
+              }
+              else {
+                self.setFormats  (r, o);
+              }
+            }
+            else {
+              // delete it as column is now gone
+              delete columnFormats_[d];
+            }
+          });
+        }
+      }
+    }
+    else {
+      // there;'s no formatting to do
+    }
+    return self;
+    
+  }
   /**
    * get header format
    * @return self
    */
-  self.setHeaderFormat = function (headerFormat) {
-    headerFormat_ = headerFormat || {};
-    return self;
+  self.getHeaderFormat = function () {
+    return headerFormat_;
   };
+  
   /**
   * iterate through each row - nodifies the data in this fiddler instance
   * @param {function} [func] optional function that shoud return true if the row is to be kept
@@ -685,6 +797,9 @@ function Fiddler(sheet) {
 
     // do header formats
     if (v[0].length)self.applyHeaderFormat(range);
+    
+    // do column formats
+    self.applyColumnFormats (range);
     
     return self;                       
   };
