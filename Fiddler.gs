@@ -854,6 +854,47 @@ function Fiddler(sheet) {
       skipValues: true
     });
   };
+  
+  
+  /**
+   * get the rangelist for a group of columns
+   * @param {sheet} sheet 
+   * @param {[string]} [columnNames=*] default is all of them
+   * @param {object} [options={rowOffset:1,numberOfRows:1,columnOffset:1,numberOfColumns:1}]
+   * @return {RangeList}
+   */
+  self.getRangeList = function (columnNames,options,sheet) {
+    options = options || {};
+    sheet = sheet || sheet_;
+    if (!sheet) throw 'sheet must be provided to getRangeList';
+    var range =  self.getRange (sheet.getDataRange());
+    
+    // range will point at start point of data
+    if ( self.hasHeaders()) range = range.offset (1,0,range.getNumRows()-1);
+
+    
+    // default options are the whole datarange for each column
+    var defOptions = {rowOffset:0,numberOfRows:self.getNumRows(),columnOffset:0,numberOfColumns:1};
+    
+    // set defaults and check all is good
+    Object.keys(defOptions).forEach (function (d) {
+      if(typeof options[d] === typeof undefined) options[d] = defOptions[d];
+    });
+    Object.keys(options).forEach (function (d) {
+      if(typeof options[d] !== "number" || !defOptions.hasOwnProperty(d) || options[d] < 0 )throw 'invalid property/value option ' + d + options[d] + 'to getRangeList ';
+    });
+    if (options.numberOfRows < 1 || options.numberOfColumns < 1) throw 'must be a range of some size for rangeList ' + JSON.stringify (options);
+    
+    // get the columnnames and expand out as required
+    var columnRanges = patchColumnNames_(columnNames)
+    .map (function (d) {
+      return range.offset ( options.rowOffset , headerOb_[d] + options.columnOffset , options.numberOfRows, options.numberOfColumns ).getA1Notation();
+    });
+    
+    return sheet.getRangeList (columnRanges);
+    
+    
+  };
   /**
   * get the range required to write the values starting at the given range
   * @param {Range} [range=null] the range
