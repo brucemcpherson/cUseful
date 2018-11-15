@@ -311,7 +311,7 @@ function Fiddler(sheet) {
     // undefined columnNames means them all
     // names can be a single column or an array
     var headers = self.getHeaders(); 
-    columnNames = typeof columnNames === typeof undefined ? headers : (Array.isArray(columnNames) ? columnNames : [columnNames] );
+    columnNames = typeof columnNames === typeof undefined || columnNames === null ? headers : (Array.isArray(columnNames) ? columnNames : [columnNames] );
     var bad = columnNames.filter (function (d) {
       return headers.indexOf (d) === -1;
     });
@@ -421,7 +421,7 @@ function Fiddler(sheet) {
       // we'll need this later
       var dr = range.getSheet().getDataRange();
       /// make space for the header
-      if (self.hasHeaders() && dr.getNumRows()) {
+      if (self.hasHeaders() && dr.getNumRows() > 1) {
         dr = dr.offset (1,0,dr.getNumRows()-1);
       }
       if (Object.keys (columnFormats_).length === 0) {
@@ -430,7 +430,7 @@ function Fiddler(sheet) {
       }
       else {
         // first clear the bottom part of the sheet with no data
-        if (dr.getNumRows() > self.getNumRows()) {
+        if (dr.getNumRows() > self.getNumRows() && self.getNumRows()) {
           dr.offset ( self.getNumRows() - dr.getNumRows() , 0 , dr.getNumRows() - self.getNumRows()).clearFormat();
         }
         
@@ -855,7 +855,42 @@ function Fiddler(sheet) {
     });
   };
   
+  /**
+   * get the header an index number
+   * @param {string} the header
+   * @return {number} the index
+   */
+  self.getHeaderIndex = function (header) {
+    return self.getHeaders().indexOf ( header );
+  };
   
+  /**
+   * get the header by index number
+   * @param {number} the index number (-1) the last one, -2 2nd last etc
+   * @return {string} the header
+   */
+  self.getHeaderByIndex = function (index) {
+    var headers = self.getHeaders();
+    return index < 0 ? headers[headers.length+index] : headers[index];
+  };
+  
+  /**
+   * get the names of columns occurring between start and finish
+   * @param {string} [start=the first one] start column name (or the first one)
+   * @param {string} [finish=the last one] finish column name (or the last one)
+   * @return {[string]} the columns 
+   */
+  self.getHeadersBetween = function ( start , finish ) {
+    start = start || self.getHeaderByIndex(0);
+    finish = finish || self.getHeaderByIndex(-1);
+    startIndex = self.getHeaderIndex(start);
+    finishIndex = self.getHeaderIndex(finish);
+    if (startIndex === -1) throw 'column ' + start + ' not found';
+    if (finishIndex === -1) throw 'column ' + finish + ' not found';
+    var [s,f] = [startIndex, finishIndex].sort ();
+    var list = self.getHeaders().slice (s,f+1);
+    return startIndex > finishIndex ? list.reverse() : list;
+  }
   /**
    * get the rangelist for a group of columns
    * @param {sheet} sheet 
@@ -870,9 +905,9 @@ function Fiddler(sheet) {
     var range =  self.getRange (sheet.getDataRange());
     
     // range will point at start point of data
-    if ( self.hasHeaders()) range = range.offset (1,0,range.getNumRows()-1);
+    if ( self.hasHeaders() && range.getNumRows() > 1 ) range = range.offset (1,0,range.getNumRows()-1);
 
-    
+
     // default options are the whole datarange for each column
     var defOptions = {rowOffset:0,numberOfRows:self.getNumRows(),columnOffset:0,numberOfColumns:1};
     
@@ -883,18 +918,37 @@ function Fiddler(sheet) {
     Object.keys(options).forEach (function (d) {
       if(typeof options[d] !== "number" || !defOptions.hasOwnProperty(d) || options[d] < 0 )throw 'invalid property/value option ' + d + options[d] + 'to getRangeList ';
     });
-    if (options.numberOfRows < 1 || options.numberOfColumns < 1) throw 'must be a range of some size for rangeList ' + JSON.stringify (options);
+    
+    ///
     
     // get the columnnames and expand out as required
     var columnRanges = patchColumnNames_(columnNames)
     .map (function (d) {
-      return range.offset ( options.rowOffset , headerOb_[d] + options.columnOffset , options.numberOfRows, options.numberOfColumns ).getA1Notation();
+      return range.offset ( options.rowOffset , headerOb_[d] + options.columnOffset , options.numberOfRows || 2, options.numberOfColumns || 2).getA1Notation();
+    })
+    .map (function (d) {
+      // need to treat number of rows (B1:B) or num of columns (c1:1) being 0
+      if (options.numberOfRows && options.numberOfColumns) return d;
+      if (options.numberOfRows < 1 && options.numberOfColumns < 1) throw 'must be a range of some size for rangeList ' + JSON.stringify (options);
+      if (!options.numberOfRows) {
+        //B1:b10 becoms b1:b
+        return d.replace (/(\w+:)([^\d]+).*/,"$1$2");
+      }
+      if (!options.numberOfColumns) {
+        return d.replace (/(\w+:).+?([\d]+).*/,"$1$2");
+      }
     });
     
-    return sheet.getRangeList (columnRanges);
-    
-    
-  };
+    // this will cause getRanges not to break if there are no ranges
+    return columnRanges.length ? 
+      sheet.getRangeList (columnRanges) : {
+        getRanges: function () {
+          return [];
+        }
+      };
+      
+    };
+
   /**
   * get the range required to write the values starting at the given range
   * @param {Range} [range=null] the range
