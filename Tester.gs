@@ -17,8 +17,15 @@ function Tester () {
         self.logger (Array.prototype.slice.call(arguments,1));
       }
       return valid;
-    }
+    };
     
+    self.assureThrow = function (valid) {
+      if (!valid) good = false;
+      if (!valid) {
+        self.thrower (Array.prototype.slice.call(arguments,1));
+      }
+      return valid;
+    };
     self.logger = function () {
       var args = Array.prototype.slice.apply(arguments);
       var mess = (args || []).map (function (d) {
@@ -26,6 +33,16 @@ function Tester () {
         return d.toString ? d.toString() : d;
       }).join ("\n" + spaces());
       flogger (spaces() + mess);
+      return self;
+    };
+  
+    self.thrower = function () {
+      var args = Array.prototype.slice.apply(arguments);
+      var mess = (args || []).map (function (d) {
+        if (typeof d === "object") return JSON.stringify(d);
+        return d.toString ? d.toString() : d;
+      }).join ("\n" + spaces());
+      throw mess;
       return self;
     };
   
