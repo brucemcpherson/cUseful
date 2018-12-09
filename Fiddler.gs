@@ -19,7 +19,32 @@ function Fiddler(sheet) {
       sheet_ = null,
       headerFormat_ = {},
       columnFormats_ = null,
-      tidyFormats_ = false;
+      tidyFormats_ = false,
+      flatOptions_ = null,
+      defaultFlat = {
+        flatten:true,
+        objectSeparator:".",
+        itemSeparator:",",
+        expandArray: true,
+        columns:[]
+      };
+  
+  /**
+   * TODO .. its a long story because of formatting 
+   * work out details for next major version
+   *
+   * flattener works like this
+   * when writting to a sheet
+   * any objects get flattened 
+   *  {a:1,b:2,c:{d:3,e:{f:25}},g:[1,2,3]}
+   *  becomes  
+   *  header of a,b c.d c.e.f g.o g.1 g.2
+   *  values of 1 2 3 25 1 2 3
+   *  objectseparator(".") is used in headers as in "c.d" and "g.1" 
+   *  and itemSeparator is used in arrays where expandArray is true as in 1 2 3 versus 1,2,3 in a single column
+   * when reading from a sheet
+   *  headers are investigated for patterns like above and get shrunk back into objects/arrays
+   **/
   
   /**
   * these are the default iteration functions
@@ -369,6 +394,26 @@ function Fiddler(sheet) {
     columnNames.forEach (function (d) { columnFormats_[d] = columnFormat });
     return self;
   };
+  
+  /**
+   * set flatting options
+   * @param 
+   * @return self
+   */
+  self.setFlattener = function (options) {
+    flattenOptions_ = options;
+    return self;
+  };
+  
+  /**
+   * get flattening options
+   * @param 
+   * @return self
+   */
+  self.getFlattener = function (options) {
+    return flattenOptions_;
+  };
+  
   /**
    * applies  formats
    * @param {object} format eg .. {backgrounds:'string',fontColors:'string',wraps:boolean,fontWeights:'string'}
@@ -377,22 +422,15 @@ function Fiddler(sheet) {
    */
   self.setFormats = function (range, format) {
     // if there's anything to do
-    if(range.getNumColumns() && range.getNumRows()){
+    var atr = range.getNumRows();
+    var atc = range.getNumColumns();
+    if(atc && atr){
       // for every format mentioned
       Object.keys(format).forEach (function (f) {
-        // create an array the same shape as the range
-        var values = new Array (range.getNumRows()).slice().map (function () {
-          return new Array(range.getNumColumns()).slice().map (function () {
-            // filled with the required values
-            return format[f];
-          })
-        });
-       
         // check method exists and apply it
-        var method = 'set'+f.slice(0,1).toUpperCase()+f.slice(1);
+        var method = 'set'+f.slice(0,1).toUpperCase()+f.slice(1).replace (/s$/,"").replace(/ies$/,"y");
         if (typeof range[method] !== "function") throw 'unknown format ' + method;
-        range[method](values);
-     
+        range[method](format[f]);
       });
     }
     return self;
@@ -438,12 +476,15 @@ function Fiddler(sheet) {
    * @return self;
    */
   self.applyColumnFormats = function (range )  {
+    var foCollect = [];
+    
     if ( columnFormats_ ) {
       // we'll need this later
       var dr = range.getSheet().getDataRange();
+      var atr = dr.getNumRows();
       /// make space for the header
-      if (self.hasHeaders() && dr.getNumRows() > 1) {
-        dr = dr.offset (1,0,dr.getNumRows()-1);
+      if (self.hasHeaders() && atr > 1) {
+        dr = dr.offset (1,0,atr-1);
       }
       if (Object.keys (columnFormats_).length === 0) {
         // this means clear format for entire thing
@@ -451,12 +492,11 @@ function Fiddler(sheet) {
       }
       else {
         // first clear the bottom part of the sheet with no data
-        if (dr.getNumRows() > self.getNumRows() && self.getNumRows()) {
-          dr.offset ( self.getNumRows() - dr.getNumRows() , 0 , dr.getNumRows() - self.getNumRows()).clearFormat();
+        var atr = dr.getNumRows();
+        if (atr > self.getNumRows() && self.getNumRows()) {
+          dr.offset ( self.getNumRows() - atr , 0 , atr - self.getNumRows()).clearFormat();
         }
-        
-        // TODO optimize common formats on adjacent columns to single set
-        // for now  1 at a time.
+
         if (self.getNumRows() ) {
           Object.keys(columnFormats_)
           .forEach (function (d) {
@@ -471,7 +511,11 @@ function Fiddler(sheet) {
                 r.clearFormat();
               }
               else {
-                self.setFormats  (r, o);
+                //self.setFormats  (r, o);
+                foCollect.push ({
+                  format: o ,
+                  range: r
+                });
               }
             }
             else {
@@ -485,6 +529,48 @@ function Fiddler(sheet) {
     else {
       // there;'s no formatting to do
     }
+    // optimize the formatting
+    var foNew = foCollect.reduce (function (p,c) {
+      // index by the format being set
+      var sht = c.range.getSheet();
+      var sid = sht.getSheetId();
+      Object.keys(c.format)
+      .forEach (function (f) {
+        var key = f+"_"+c.format[f]+"_"+sid;
+        p[key] = p[key] || {
+          value:c.format[f],
+          format:f,
+          ranges:[],
+          sheet:sht
+        };
+        p[key].ranges.push (c.range);
+      })
+      return p;
+    } , {});
+    
+    // now make rangelists and apply formats 
+    Object.keys(foNew)
+    .forEach (function (d) {
+      var o = foNew[d];
+      // make the range list - they are all ont he same sheet
+      var sht = o.sheet;
+      var rangeList = sht.getRangeList (o.ranges.map(function (e) { return e.getA1Notation(); }));
+      // workout the method (could be pluralized)
+      var method = "set"+o.format.slice(0,1).toUpperCase()+o.format.slice(1).replace (/s$/,"").replace(/ies$/,"y");
+      var t = {};
+      t[o.format] = o.value;
+      if (!rangeList[method]) {
+        // fall back to individual ranges
+        rangeList.getRanges()
+        .forEach (function (e) {
+          self.setFormats (e , t);
+        });
+      }
+      else {
+        rangeList[method] (o.value);
+      }
+    });
+   
     return self;
     
   }
@@ -828,16 +914,24 @@ function Fiddler(sheet) {
     var range =(sheet || sheet_).getDataRange();
     if (!options.skipValues) range.clearContent();
 
+    // if we're flattening then we need to do some fiddling with the data
+    // TODO .. its a long story because of formatting 
+    // do it in next major version
+    
     // we only do something if there's anydata
     var r = self.getRange(range);
     var v = self.createValues();
     
     // we need to clear any formatting outside the ranges that may have been deleted
     if (tidyFormats_ && !options.skipFormats) {
-      var rc = range.getNumColumns () > r.getNumColumns () && range.getNumRows() ? 
-        range.offset (0, r.getNumColumns () , range.getNumRows() , range.getNumColumns () - r.getNumColumns ()).getA1Notation() : "";
-      var rr = range.getNumRows () > r.getNumRows () && range.getNumColumns() ? 
-        range.offset (r.getNumRows () , 0,  range.getNumRows () - r.getNumRows ()).getA1Notation() : "";
+      var rtc = r.getNumColumns ();
+      var rtr = range.getNumRows();
+      var atc = range.getNumColumns();
+      var atr = range.getNumRows();
+      var rc = atc > rtc && atr ? 
+        range.offset (0, rtc , atr , atc - rtc).getA1Notation() : "";
+      var rr = atr > rtr && atc ? 
+        range.offset (rtr , 0,  atr - rtr).getA1Notation() : "";
       var rl = [];
       if (rc) rl.push (rc);
       if (rr) rl.push (rr);
@@ -926,7 +1020,8 @@ function Fiddler(sheet) {
     var range =  self.getRange (sheet.getDataRange());
     
     // range will point at start point of data
-    if ( self.hasHeaders() && range.getNumRows() > 1 ) range = range.offset (1,0,range.getNumRows()-1);
+    var atr = range.getNumRows();
+    if ( self.hasHeaders() && atr > 1 ) range = range.offset (1,0,atr-1);
 
 
     // default options are the whole datarange for each column
@@ -1016,7 +1111,8 @@ function Fiddler(sheet) {
         }
       };
   };
-    
+  
+  
   /**
   * get the range required to write the values starting at the given range
   * @param {Range} [range=null] the range
