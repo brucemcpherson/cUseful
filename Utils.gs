@@ -502,7 +502,7 @@ var Utils = (function (ns) {
    */
   ns.find = function ( arr ,func) {
     
-    var k = ns.find (arr , func );
+    var k = ns.findIndex (arr , func );
     return k === -1 ? undefined : arr[k];
   };
   
