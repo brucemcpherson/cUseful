@@ -284,6 +284,7 @@ var Squeeze = (function (ns) {
       
       // in case the key is an object
       propKey = fudgeKey_(propKey);
+      var removed = 0;
       
       // always big properties are always crushed
       var chunky = self.getChunkKeys (prefix_ + propKey);
@@ -292,14 +293,16 @@ var Squeeze = (function (ns) {
       if (chunky && chunky.chunks) {
         chunky.chunks.forEach(function (d) {
           removeObject_ (self.getStore(), d);
+          removed++;
         });
       }
       // now remove the master property
       if (chunky.digest) {
         removeObject_ (self.getStore() , prefix_ + propKey);
+        removed++;
       }
       
-      return self;
+      return removed;
       
     };
     
