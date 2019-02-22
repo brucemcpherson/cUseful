@@ -465,7 +465,7 @@ function Fiddler(sheet) {
   self.applyHeaderFormat = function (range, format) {
     if (!self.getNumColumns()) return self;
     format = format || headerFormat_;
-    var rangeList = self.makeRangeList ([range.offset(0,0,1,self.getNumColumns())], {numberOfRows:1} , sheet_ );
+    var rangeList = self.makeRangeList ([range.offset(0,0,1,self.getNumColumns())], {numberOfRows:1} , range.getSheet() );
     return self.setRangelistFormat (rangeList, headerFormat_); 
   };
     
@@ -1072,7 +1072,7 @@ function Fiddler(sheet) {
     
     options = options || {};
     sheet = sheet || sheet_;
-    if (!sheet) throw 'sheet must be provided to getRangeList';
+    if (!sheet) throw 'sheet must be provided to makeRangeList';
     
     // default options are the whole datarange for each column
     var defOptions = {rowOffset:0,numberOfRows:self.getNumRows(),columnOffset:0,numberOfColumns:1};
