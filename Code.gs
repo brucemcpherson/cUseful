@@ -12,10 +12,10 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.7.6',
+      version:'2.8.1',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
-      description:'2.7.6 fixed bug in dumpvalues'
+      description:'2.8.1 added unnest'
     }
   }; 
 }
