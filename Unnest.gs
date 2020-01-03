@@ -51,7 +51,11 @@ var Unnest = (function (ns){
     var ob = options.ob;
     var sep = options.sep || '_';
     var cloner = options.cloner || function(item) { return JSON.parse(JSON.stringify(item))};
-
+    
+    var isObject = function (sob) {
+      return typeof (sob) === 'object' && !(sob instanceof Date);
+    };
+    
     // recursive piece
     var makeRows = function (sob, rows, currentKey, cob) {
       rows = rows || [];
@@ -78,9 +82,11 @@ var Unnest = (function (ns){
           // recurse for each element
           makeRows(f, rows, currentKey, clob);
         });
-        
-      } else if (typeof (sob) === 'object' && !(sob instanceof Date)) {
-        Object.keys(sob).forEach(function (k, i) {
+      } else if (isObject(sob)) {
+      // deal with the non object children first so they get cloned too   
+        Object.keys(sob).sort(function(a,b) { 
+         return isObject(sob[a]) && isObject(sob[b]) ? 0 : (isObject(sob[b]) ? -1: 1);
+        }).forEach(function (k, i) {
           // add to the key, but nothing to the accumulating object
           makeRows(sob[k], rows, currentKey ? currentKey + sep + k : k, cob);
         });
