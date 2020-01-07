@@ -92,7 +92,7 @@ var Unnest = (function (ns){
         });
       } else {
         // its a natural value
-        if (cob.hasOwnProperty('currentKey')) {
+        if (cob.hasOwnProperty(currentKey)) {
           // something has gone wrong here - show should probably be a throw
           Logger.log('attempt to to overwrite property', cob, currentKey, 'row', rows.length);
         } else {
