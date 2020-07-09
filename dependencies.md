@@ -1,5 +1,5 @@
 # Google Apps Script Project: cUseful
-This repo (cUseful) was automatically updated on 07 January 2020 14:39:46 GMT by GasGit
+This repo (cUseful) was automatically updated on 09/07/2020, 17:38:34 by GasGit
 
 For more information see the [desktop liberation site](http://ramblings.mcpher.com/Home/excelquirks/drivesdk/gettinggithubready "desktop liberation") or [contact me on G+](https://plus.google.com/+BruceMcpherson "Bruce McPherson - GDE")
 ## Details for Apps Script project cUseful
@@ -9,6 +9,7 @@ The shared link for [cUseful is here](https://script.google.com/d/1EbLSESpiGkI3P
 ### Modules of cUseful.gs included in this repo
 *name*|*type*
 --- | --- 
+appsscript| json
 Code| server_js
 forPublishing| server_js
 Utils| server_js
@@ -20,7 +21,6 @@ Include| server_js
 Squeeze| server_js
 UserRegistration| server_js
 DriveProper| server_js
-appsscript| json
 RemoveAccents| server_js
 Stopwords| server_js
 Stemmer| server_js
