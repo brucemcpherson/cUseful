@@ -449,7 +449,7 @@ var Utils = (function (ns) {
   };
   /**
   * simple test for an object type
-  * @param {*} the thing to test
+  * @param {*} value the thing to test
   * @return {bool} whether it was an object
   */
   ns.isVanObject = function(value) {
@@ -700,9 +700,18 @@ var Utils = (function (ns) {
   };
 
   ns.byte2hex = function(data) {
-    var conv;
+
+    /*
+    syntax not liked by v8
     conv = [(i < 0 ? i + 256 : i).toString(16) for each (i in data)];
     return [i.length == 1 ? "0" + i : i for each (i in conv)];
+    */
+    var conv = data.map(function(f) { 
+      return (f < 0 ? f + 256 : f).toString(16)
+    })
+    return conv.map(function(f){
+       return f.length == 1 ? "0" + f : f
+    })
   };
 
   ns.byte2num = function(data, byteorder) {
