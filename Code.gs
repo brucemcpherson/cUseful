@@ -4,6 +4,7 @@
  
 "use strict";
 
+
 /** 
  * used for dependency management
  * @return {LibraryInfo} the info about this library and its dependencies
@@ -12,10 +13,10 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.8.3',
+      version:'2.8.6',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
-      description:'2.8.3 tweaked unnest for error check'
+      description:'2.8.6 patched for changed apps script stack trace format'
     }
   }; 
 }
@@ -364,6 +365,7 @@ function showError (err) {
   }
 }
 
+
  /**
  * identify the call stack
  * @param {Number} level level of call stack to report at (1 = the caller, 2 the callers caller etc..., 0 .. the whole stack
@@ -382,6 +384,7 @@ function whereAmI(level) {
   catch (err) {
     // return the error object so we know where we are
     var stack = err.stack.split('\n');
+
     if (!level) {
       // return an array of the entire stack
       return stack.slice(0,stack.length-1).map (function(d) {
@@ -397,14 +400,28 @@ function whereAmI(level) {
   }
   
   function deComposeMatch (where) {
-    
-    var file = /at\s(.*):/.exec(where);
-    var line =/:(\d*)/.exec(where);
-    var caller =/:.*\((.*)\)/.exec(where);
-    
+    var file, line, caller;
 
-    return {caller:caller ? caller[1] :  'unknown' ,line: line ? line[1] : 'unknown',file: file ? file[1] : 'unknown'};
-
+    /*
+    // approach 1
+    file = /at\s(.*):/.exec(where);
+    line =/:(\d*)/.exec(where);
+    caller =/:.*\((.*)\)/.exec(where);
+    */
+    // at some point apps script changed format
+    // actually this doesnt work at all anymore when part of a library
+    // it always returns Object.whoAmI
+    if(!caller) {
+      caller = where.replace(/\s*?at\s*([^\s]*).*/,'$1');
+      file = where.replace(/.*\(([^:]*).*/,'$1');
+      line = where.replace(/[^:]*:(\d+).*/,'$1');
+    }
+  
+    return {
+      caller:caller ? caller :  'unknown',
+      line: line ? line : 'unknown',
+      file: file ? file : 'unknown'
+    };
   }
 }
 
@@ -645,7 +662,6 @@ function validateArgs (funcArgs , funcTypes , optFail) {
       }
     };
     
-    Logger.log (JSON.stringify(state));
     if (fail) {
       throw JSON.stringify(state); 
     }
