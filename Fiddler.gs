@@ -631,7 +631,9 @@ function Fiddler(sheet) {
    */
   self.sortFiddler = function (name , descending , auxFiddler ) {
     var data = self.sort (name , descending , auxFiddler);
-    self.setData (data);
+    // the true means we try to preserve the order of the original fiddler columns
+    // if possible - as self data would normally recreate them according to insert time
+    self.setData (data, true);
     return self;
   }
   
@@ -921,7 +923,7 @@ function Fiddler(sheet) {
     // we only do something if there's anydata
     var r = self.getRange(range);
     var v = self.createValues();
-    
+
     // we need to clear any formatting outside the ranges that may have been deleted
     if (tidyFormats_ && !options.skipFormats) {
       var rtc = r.getNumColumns ();
@@ -1407,13 +1409,13 @@ function Fiddler(sheet) {
   * replace the current data in the fiddle
   * will also update the headerOb
   * @param {[object]} dataOb the new dataOb
+  * @param {boolean} [preserveOrder] whether to attempt to preserve existing order of keys
   * @return {Fiddle} self
   */
-  self.setData = function(dataOb) {
+  self.setData = function(dataOb, preserveOrder) {
     
     // need to calculate new headers
-    
-    headerOb_ = (dataOb || []).reduce(function(hob, row) {
+    const proposedHeader = (dataOb || []).reduce(function(hob, row) {
       Object.keys(row).forEach(function(key) {
         if (!hob.hasOwnProperty(key)) {
           hob[key] = Object.keys(hob).length;
@@ -1421,6 +1423,15 @@ function Fiddler(sheet) {
       });
       return hob;
     }, {});
+
+    // if the existing header contains the same keys as the original, 
+    // then preserve the original order on request
+    const ok = Object.keys(proposedHeader);
+    const hk = Object.keys(headerOb_);
+    if (!preserveOrder || !headerOb_ || hk.length !== ok.length || ok.some(function (t) { return hk.indexOf(t) === -1; })) {
+      headerOb_ = proposedHeader
+    } 
+    // set the new data ob
     dataOb_ = dataOb;
     return self;
   };
@@ -1564,7 +1575,7 @@ function Fiddler(sheet) {
     
     // add the headers if there are any
     var vals = [self.hasHeaders() ? Object.keys(headerOb_) : []];
-   
+
     // put the kv pairs back to values
     return dataOb_.reduce (function (p,row) {
       Array.prototype.push.apply (p , [vals[0].map (function (d) {
