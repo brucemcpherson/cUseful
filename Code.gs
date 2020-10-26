@@ -13,10 +13,10 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.8.6',
+      version:'2.8.7',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
-      description:'2.8.6 patched for changed apps script stack trace format'
+      description:'2.8.7 patched fiddler to optionally retain original order on setdata'
     }
   }; 
 }
