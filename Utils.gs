@@ -207,6 +207,10 @@ var Utils = (function (ns) {
    * not a comprehensive test
    */
   ns.isBlob = function (blob) {
+    
+    // apps script tends to return the name as blob
+    if (ns.isObject(blob) && blob.toString() === 'Blob') return true
+    // pre v8 test
     return blob && typeof blob === "object" && 
         typeof blob.setContentTypeFromExtension === "function" && 
         typeof blob.getBytes === "function";
