@@ -1427,8 +1427,8 @@ function Fiddler(sheet) {
     // if the existing header contains the same keys as the original, 
     // then preserve the original order on request
     const ok = Object.keys(proposedHeader);
-    const hk = Object.keys(headerOb_);
-    if (!preserveOrder || !headerOb_ || hk.length !== ok.length || ok.some(function (t) { return hk.indexOf(t) === -1; })) {
+    const hk = headerOb_ && Object.keys(headerOb_);
+    if (!preserveOrder || !hk || hk.length !== ok.length || ok.some(function (t) { return hk.indexOf(t) === -1; })) {
       headerOb_ = proposedHeader
     } 
     // set the new data ob
