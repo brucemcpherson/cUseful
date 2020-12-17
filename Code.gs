@@ -13,16 +13,16 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.8.7',
+      version:'2.8.9',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
-      description:'2.8.7 patched fiddler to optionally retain original order on setdata'
+      description:'v8 issue with recognizing blobs fixed'
     }
   }; 
 }
 
 /**
- * test for a date object
+ * test for a date objec
  * @param {*} ob the on to test
  * @return {boolean} t/f
  */
