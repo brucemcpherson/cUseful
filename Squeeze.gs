@@ -324,7 +324,7 @@ var Squeeze = (function (ns) {
       if (Utils.isUndefined (ob) ) {
         throw 'cant write undefined to store';
       }
-  
+     
       // blob pulls it out
       if (Utils.isBlob (ob) ) {
         var slob = {
