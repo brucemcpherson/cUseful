@@ -1,7 +1,13 @@
 # Google Apps Script Project: cUseful
-This repo (cUseful) was automatically updated on 17/12/2020, 09:41:32 by GasGit
+This repo (cUseful) was automatically updated on 12/22/2020, 4:57:26 PM by GasGit
 
-For more information see the [desktop liberation site](http://ramblings.mcpher.com/Home/excelquirks/drivesdk/gettinggithubready "desktop liberation") or [contact me on G+](https://plus.google.com/+BruceMcpherson "Bruce McPherson - GDE")
+For more information on gasgit, see the [desktop liberation site](https://ramblings.mcpher.com/drive-sdk-and-github/migrategasgit/ "desktop liberation")
+
+For more info on cUseful try https://ramblings.mcpher.com/?s=cUseful or use the issues section of this repo to contact me
+## Library reference
+1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex
+
+
 ## Details for Apps Script project cUseful
 Where possible directly referenced or sub referenced library sources have been copied to this repository, or you can include the library references shown. 
 The shared link for [cUseful is here](https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing "open in the GAS IDE")
@@ -32,6 +38,7 @@ Crusher| server_js
 Fetcheroo| server_js
 Tester| server_js
 Unnest| server_js
+Maths| server_js
 ### Directly referenced libraries
 no libraries discovered
 ### All dependencies and sub dependencies
