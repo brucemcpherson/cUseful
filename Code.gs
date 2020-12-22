@@ -13,10 +13,10 @@ function getLibraryInfo () {
   return {
     info: {
       name:'cUseful',
-      version:'2.8.9',
+      version:'2.9.0',
       key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
       share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
-      description:'v8 issue with recognizing blobs fixed'
+      description:'2.9.0 added new Maths namespace'
     }
   }; 
 }
