@@ -186,7 +186,7 @@ var Utils = (function (ns) {
   **/
   ns.generateUniqueString = function (optAbcLength) {
     var abcLength = ns.isUndefined(optAbcLength) ? 3 : optAbcLength;
-    return  (new Date().getTime()).toString(36)  + arbitraryString(abcLength) ;
+    return  (new Date().getTime()).toString(36)  + ns.arbitraryString(abcLength) ;
   };
   
   /** 
