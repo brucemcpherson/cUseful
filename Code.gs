@@ -2,7 +2,7 @@
  * cUseful
  **/
  
-"use strict";
+
 
 
 /** 
