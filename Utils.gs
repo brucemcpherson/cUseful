@@ -23,7 +23,7 @@ var Utils = (function (ns) {
     //sleepFor = Math.abs(options.sleepFor ||
     
     options = options || {};
-    optionsDefault = { 
+    var optionsDefault = { 
       sleepFor:  750,
       maxAttempts:5,                  
       checker:errorQualifies,
