@@ -1,25 +1,6 @@
 /** useful functions
  * cUseful
  **/
- 
-
-
-
-/** 
- * used for dependency management
- * @return {LibraryInfo} the info about this library and its dependencies
- */
-function getLibraryInfo () {
-  return {
-    info: {
-      name:'cUseful',
-      version:'2.9.0',
-      key:'Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j',
-      share:'https://script.google.com/d/1EbLSESpiGkI3PYmJqWh3-rmLkYKAtCNPi1L2YCtMgo2Ut8xMThfJ41Ex/edit?usp=sharing',
-      description:'2.9.0 added new Maths namespace'
-    }
-  }; 
-}
 
 /**
  * test for a date objec
@@ -314,7 +295,7 @@ function arrayRank (array,funcCompare,funcStoreRank,funcGetRank,optOriginalOrder
   funcCompare = funcCompare ||   function (a,b) {
         return a.value - b.value;
       };
-  funcStoreRank = funcStoreRank || function (d,r,a) {
+  funcStoreRank = funcStoreRank || function (d,r) {
         d.rank = r; 
         return d;
       };
@@ -349,8 +330,8 @@ function showError (err) {
 
   try {
     if (isObject(err)) {
-      if (e.message) {
-        return "Error message returned from Apps Script\n" + "message: " + e.message + "\n" + "fileName: " + e.fileName + "\n" + "line: " + e.lineNumber + "\n";
+      if (err.message) {
+        return "Error message returned from Apps Script\n" + "message: " + err.message + "\n" + "fileName: " + err.fileName + "\n" + "line: " + err.lineNumber + "\n";
       }
       else {
         return JSON.stringify(err);
