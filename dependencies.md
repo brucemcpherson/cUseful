@@ -1,5 +1,5 @@
 # Google Apps Script Project: cUseful
-This repo (cUseful) was automatically updated on 3/2/2022, 1:53:17 PM by GasGit
+This repo (cUseful) was automatically updated on 3/5/2022, 4:35:24 PM by GasGit
 
 For more information on gasgit, see the [desktop liberation site](https://ramblings.mcpher.com/drive-sdk-and-github/migrategasgit/ "desktop liberation")
 
@@ -17,9 +17,7 @@ The shared link for [cUseful is here](https://script.google.com/d/1EbLSESpiGkI3P
 --- | --- 
 appsscript| json
 Code| server_js
-forPublishing| server_js
 Utils| server_js
-Fiddler| server_js
 DriveUtils| server_js
 SheetUtils| server_js
 FetchUtils| server_js
@@ -39,6 +37,7 @@ Fetcheroo| server_js
 Tester| server_js
 Unnest| server_js
 Maths| server_js
+Fiddler| server_js
 ### Directly referenced libraries
 no libraries discovered
 ### All dependencies and sub dependencies
