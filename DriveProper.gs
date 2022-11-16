@@ -42,8 +42,8 @@ var DriveProper = function (service) {
   */
   self.get = function (fileId , all) {
     
-    return service_.Files.get(fileId)
-    .properties.filter (function (d) {
+    return (service_.Files.get(fileId)
+    .properties || []).filter (function (d) {
       return all || d.visibility === "PRIVATE";
     })
     .map (function (d) {
