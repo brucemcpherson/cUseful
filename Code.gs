@@ -219,7 +219,7 @@ function rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts, attempts , opt
           Utilities.sleep (Math.pow(2,attempts)*sleepFor + (Math.round(Math.random() * sleepFor)));
           
           // try again
-          return rateLimitExpBackoff ( callBack, sleepFor ,  maxAttempts , attempts+1,optLogAttempts);
+          return rateLimitExpBackoff(callBack, sleepFor, maxAttempts, attempts+1, optLogAttempts, optChecker);
         }
       }
       else {
