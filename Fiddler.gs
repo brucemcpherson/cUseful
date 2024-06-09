@@ -1,4 +1,8 @@
 /**
+* this is deprecated and no longer maintained
+* the maintained fiddler is is in a separate library 
+* - bmFiddler 13EWG4-lPrEf34itxQhAQ7b9JEbmCBfO8uE4Mhr99CHi3Pw65oxXtq-rU
+* see also bmPreFiddler - 13JUFGY18RHfjjuKmIRRfvmGlCYrEkEtN6uUm-iLUcxOUFRJD-WBX-tkR
 * this is the V8 version
 * if you need the legacy version use cUseful.Fiddler
 * this is a utility for messing around with 
