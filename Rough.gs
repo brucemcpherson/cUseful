@@ -143,7 +143,7 @@ var Rough = function () {
     
     if (input.length) {
       // stubs in the row
-      const mover = -1;
+      let mover = -1;
       input.forEach (function (s) {
         // find the word/stem/stub in the reference row
         const ix = indexMethod ( rowInput, s);
